@@ -19,11 +19,11 @@ export function Header() {
             <Image 
               src="/logo-with-text.svg" 
               alt="AI Risk Assessment Tool" 
-              width={32} 
-              height={32}
-              className="h-6 sm:h-8 w-6 sm:w-8"
+              width={48} 
+              height={48}
+              className="h-8 sm:h-10 w-8 sm:w-10"
             />
-            <span className="text-lg sm:text-xl font-semibold text-gray-900">AI Risk Assessment Tool</span>
+            <span className="text-sm sm:text-xl font-semibold text-gray-900">AI Risk Assessment Tool</span>
           </Link>
           
           {(isResultsPage || isQuestionnairePage) && (
