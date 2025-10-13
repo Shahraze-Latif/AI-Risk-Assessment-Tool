@@ -17,7 +17,7 @@ export function Header() {
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <Image 
-              src="/logo.svg" 
+              src="/logo-with-text.svg" 
               alt="AI Risk Assessment Tool" 
               width={32} 
               height={32}
