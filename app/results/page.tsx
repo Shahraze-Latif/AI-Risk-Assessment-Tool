@@ -163,44 +163,104 @@ export default function ResultsPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Assessment Complete</h1>
-            <RiskBadge riskLevel={assessment.risk_level} className="mb-6" />
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
+          <div className="max-w-4xl mx-auto">
+            {/* Header Section */}
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                Assessment Complete
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Your AI risk assessment has been successfully completed
+              </p>
+              <RiskBadge riskLevel={assessment.risk_level} className="mb-8" />
+            </div>
 
-          <ResultSummary
-            riskLevel={assessment.risk_level}
-            yesCount={assessment.yes_count}
-            totalQuestions={assessment.total_questions}
-          />
+            {/* Main Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-8">
+              {/* Results Summary - Takes up 2 columns on large screens */}
+              <div className="lg:col-span-2">
+                <ResultSummary
+                  riskLevel={assessment.risk_level}
+                  yesCount={assessment.yes_count}
+                  totalQuestions={assessment.total_questions}
+                />
+              </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              onClick={generatePDF}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF Report
-            </Button>
-            <Link href="/">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                <Home className="mr-2 h-4 w-4" />
-                Return Home
-              </Button>
-            </Link>
-          </div>
+              {/* Action Cards - Takes up 1 column on large screens */}
+              <div className="space-y-6">
+                {/* Download Card */}
+                <Card className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Download className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Download Report</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Get a detailed PDF report of your assessment
+                    </p>
+                    <Button
+                      onClick={generatePDF}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      size="sm"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PDF Report
+                    </Button>
+                  </CardContent>
+                </Card>
 
-          <div className="mt-12 p-6 bg-gray-50 rounded-lg border">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">What's Next?</h2>
-            <ul className="space-y-2 text-gray-700">
-              <li>• Share this report with relevant stakeholders</li>
-              <li>• Review and address identified risk areas</li>
-              <li>• Implement recommended governance frameworks</li>
-              <li>• Schedule regular reassessments (recommended: quarterly)</li>
-            </ul>
+                {/* Next Steps Card */}
+                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                      <svg className="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Next Steps
+                    </h3>
+                    <ul className="space-y-3 text-sm text-gray-700">
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        Share this report with stakeholders
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        Review identified risk areas
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        Implement governance frameworks
+                      </li>
+                      <li className="flex items-start">
+                        <span className="w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                        Schedule quarterly reassessments
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-center items-center">
+              <Link href="/">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-2 hover:bg-gray-50 px-8"
+                >
+                  <Home className="mr-2 h-4 w-4" />
+                  Return Home
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
