@@ -51,84 +51,160 @@ export default function ResultsPage() {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPosition = margin;
 
-    doc.setFontSize(24);
+    // Header with company branding and decorative line
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('AI Risk Assessment Report', margin, yPosition);
-    yPosition += 15;
+    doc.setTextColor(25, 25, 112); // Navy blue
+    doc.text('System Risk Assessment Report', margin, yPosition);
+    yPosition += 6;
+    
+    // Decorative line
+    doc.setDrawColor(25, 25, 112);
+    doc.setLineWidth(1.5);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 12;
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Report ID: ${assessment.id}`, margin, yPosition);
-    yPosition += 7;
-    doc.text(`Date: ${new Date(assessment.created_at).toLocaleDateString()}`, margin, yPosition);
-    yPosition += 15;
-
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Assessment Results', margin, yPosition);
-    yPosition += 10;
-
+    // Summary section with dynamic height based on content
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    const summaryTitle = 'Summary:';
+    const summaryTitleWidth = doc.getTextWidth(summaryTitle);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
     const riskColor = assessment.risk_level === 'Low' ? [34, 197, 94] :
                       assessment.risk_level === 'Medium' ? [249, 115, 22] :
                       [239, 68, 68];
     doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
-    doc.text(`Risk Level: ${assessment.risk_level}`, margin, yPosition);
+    const summaryText = `Based on your answers, your system has been classified as: ${assessment.risk_level}`;
+    const splitSummary = doc.splitTextToSize(summaryText, pageWidth - 2 * margin - 12);
+    
+    // Calculate dynamic height based on content
+    const summaryHeight = Math.max(28, 15 + (splitSummary.length * 6));
+    
+    doc.setFillColor(240, 248, 255); // Light blue background
+    doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, summaryHeight, 3, 3, 'F');
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    yPosition += 15;
-
+    doc.text(summaryTitle, margin + 6, yPosition + 10);
+    
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Yes Responses: ${assessment.yes_count}`, margin, yPosition);
-    yPosition += 7;
-    doc.text(`Total Questions: ${assessment.total_questions}`, margin, yPosition);
-    yPosition += 15;
+    doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
+    doc.text(splitSummary, margin + 6, yPosition + 20);
+    yPosition += summaryHeight + 8;
 
+    // Key Observations section with dynamic height
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Recommendation', margin, yPosition);
-    yPosition += 10;
-
+    doc.setTextColor(0, 0, 0);
+    const obsTitle = 'Key Observations:';
+    
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    const recommendation = getRiskRecommendation(assessment.risk_level);
-    const splitRecommendation = doc.splitTextToSize(recommendation, pageWidth - 2 * margin);
-    doc.text(splitRecommendation, margin, yPosition);
-    yPosition += splitRecommendation.length * 7 + 15;
-
+    const obsText1 = `• Total questions answered: ${assessment.total_questions}`;
+    const obsText2 = `• "Yes" responses: ${assessment.yes_count}`;
+    const obsText3 = `• Risk category: ${assessment.risk_level}`;
+    
+    // Calculate dynamic height based on content (3 lines + title)
+    const obsHeight = Math.max(28, 15 + (3 * 6));
+    
+    doc.setFillColor(250, 250, 250); // Very light gray
+    doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, obsHeight, 3, 3, 'F');
+    
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Next Steps', margin, yPosition);
-    yPosition += 10;
-
+    doc.setTextColor(0, 0, 0);
+    doc.text(obsTitle, margin + 6, yPosition + 8);
+    
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    const nextSteps = [
-      '1. Share this report with relevant stakeholders',
-      '2. Review and address identified risk areas',
-      '3. Implement recommended governance frameworks',
-      '4. Schedule regular reassessments (recommended: quarterly)'
+    doc.setTextColor(0, 0, 0);
+    doc.text(obsText1, margin + 6, yPosition + 15);
+    doc.text(obsText2, margin + 6, yPosition + 21);
+    doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
+    doc.text(obsText3, margin + 6, yPosition + 27);
+    doc.setTextColor(0, 0, 0);
+    yPosition += obsHeight + 8;
+
+    // Recommendations section with dynamic height
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    const recTitle = 'Recommendations:';
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const recommendations = [
+      'Review your data handling and documentation process.',
+      'Keep a clear record of how your system makes key decisions.',
+      'Ensure users understand when AI is being used.'
     ];
 
-    nextSteps.forEach(step => {
-      doc.text(step, margin, yPosition);
-      yPosition += 7;
+    // Calculate dynamic height based on content (title + 3 recommendations)
+    const recHeight = Math.max(28, 15 + (3 * 6));
+    
+    doc.setFillColor(245, 255, 245); // Very light green
+    doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, recHeight, 3, 3, 'F');
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(recTitle, margin + 6, yPosition + 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    recommendations.forEach((rec, index) => {
+      doc.text(`• ${rec}`, margin + 6, yPosition + 15 + (index * 6));
     });
 
-    yPosition += 20;
-    const disclaimerY = doc.internal.pageSize.getHeight() - 30;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(100, 100, 100);
-    const disclaimer = 'Disclaimer: This assessment provides general guidance only and should not be considered professional legal or compliance advice. Consult with qualified professionals for specific recommendations.';
-    const splitDisclaimer = doc.splitTextToSize(disclaimer, pageWidth - 2 * margin);
-    doc.text(splitDisclaimer, margin, disclaimerY);
+    yPosition += recHeight + 8;
 
-    doc.save(`ai-risk-assessment-${assessment.id}.pdf`);
+    // Disclaimer section with dynamic height
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    const disclaimerTitle = 'Disclaimer:';
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    const disclaimer = 'This is an early-stage assessment tool designed to help identify general risk levels. It is not a legal certification.';
+    const splitDisclaimer = doc.splitTextToSize(disclaimer, pageWidth - 2 * margin - 12);
+    
+    // Calculate dynamic height based on content
+    const disclaimerHeight = Math.max(25, 15 + (splitDisclaimer.length * 4));
+    
+    doc.setFillColor(248, 249, 250); // Light gray background
+    doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, disclaimerHeight, 3, 3, 'F');
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(disclaimerTitle, margin + 6, yPosition + 8);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(splitDisclaimer, margin + 6, yPosition + 16);
+    yPosition += disclaimerHeight + 8;
+
+    // Generated by footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(120, 120, 120);
+    doc.text('Generated by: AI Global Innovations', margin, yPosition);
+
+    // No document border for cleaner look
+
+    doc.save(`system-risk-assessment-${assessment.id}.pdf`);
   };
 
   if (loading) {
@@ -152,7 +228,10 @@ export default function ResultsPage() {
             <CardContent className="pt-6 text-center">
               <p className="text-red-600 mb-4">{error || 'Assessment not found'}</p>
               <Link href="/">
-                <Button>Return Home</Button>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Return to Home Page
+                </Button>
               </Link>
             </CardContent>
           </Card>

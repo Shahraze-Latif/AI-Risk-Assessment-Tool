@@ -21,10 +21,10 @@ export function getRiskColor(riskLevel: RiskLevel): string {
 export function getRiskRecommendation(riskLevel: RiskLevel): string {
   switch (riskLevel) {
     case "Low":
-      return "Your organization demonstrates good AI risk management practices. Continue monitoring and maintaining your current standards.";
+      return "Your system shows minimal risk.";
     case "Medium":
-      return "Your organization has moderate AI risk exposure. Consider implementing additional governance frameworks and regular audits.";
+      return "Some regulatory oversight may apply.";
     case "High":
-      return "Your organization faces significant AI risks. Immediate action is recommended to establish comprehensive AI governance, ethics policies, and oversight mechanisms.";
+      return "Your system falls into a higher risk zone. Documentation and safeguards recommended.";
   }
 }

@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Brain, Home } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Header() {
@@ -14,7 +15,13 @@ export function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <Brain className="h-8 w-8 text-blue-600" />
+            <Image 
+              src="/logo.svg" 
+              alt="AI Risk Assessment Tool" 
+              width={32} 
+              height={32}
+              className="h-8 w-8"
+            />
             <span className="text-xl font-bold text-gray-900">AI Risk Assessment Tool</span>
           </Link>
           

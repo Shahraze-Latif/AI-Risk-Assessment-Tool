@@ -6,42 +6,42 @@ export interface Question {
 export const questions: Question[] = [
   {
     id: 1,
-    text: "Does your organization use AI systems to make decisions that significantly impact individuals?"
+    text: "Does your system make decisions that affect people's opportunities (like jobs, loans, or education)?"
   },
   {
     id: 2,
-    text: "Do you collect or process sensitive personal data using AI?"
+    text: "Does it analyze personal or sensitive data (like health, biometrics, or emotions)?"
   },
   {
     id: 3,
-    text: "Are your AI systems operating without regular human oversight?"
+    text: "Does it interact directly with users (like a chatbot or assistant)?"
   },
   {
     id: 4,
-    text: "Have you experienced any AI-related incidents or errors in the past year?"
+    text: "Does it provide recommendations that could influence choices (such as finance, hiring, or healthcare)?"
   },
   {
     id: 5,
-    text: "Do you lack documented policies for AI governance and ethics?"
+    text: "Do humans rely on your system's outputs without always double-checking?"
   },
   {
     id: 6,
-    text: "Are your AI models trained on data that may contain biases?"
+    text: "Does your system automatically collect or store user data?"
   },
   {
     id: 7,
-    text: "Do you use AI in high-risk domains (healthcare, finance, legal, safety)?"
+    text: "Do you use third-party datasets or APIs without a full audit?"
   },
   {
     id: 8,
-    text: "Is your AI decision-making process unclear or difficult to explain?"
+    text: "Does your system explain to users when AI is being used?"
   },
   {
     id: 9,
-    text: "Do you lack regular audits or testing of your AI systems?"
+    text: "Is the system trained or fine-tuned using real customer data?"
   },
   {
     id: 10,
-    text: "Are you unsure about compliance with AI regulations in your jurisdiction?"
+    text: "Do you plan to deploy it publicly or in multiple countries?"
   }
 ];
