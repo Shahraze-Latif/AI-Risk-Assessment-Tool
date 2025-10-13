@@ -225,7 +225,7 @@ export default function ResultsPage() {
                       </svg>
                       Next Steps
                     </h3>
-                    <ul className="space-y-3 text-sm text-gray-700">
+                    <ul className="space-y-3 text-sm text-gray-700 mb-6">
                       <li className="flex items-start">
                         <span className="w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                         Share this report with stakeholders
@@ -243,24 +243,14 @@ export default function ResultsPage() {
                         Schedule quarterly reassessments
                       </li>
                     </ul>
+                    
+                    
                   </CardContent>
-                </Card>
+                 
+                  </Card>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-center items-center">
-              <Link href="/">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-2 hover:bg-gray-50 px-8"
-                >
-                  <Home className="mr-2 h-4 w-4" />
-                  Return Home
-                </Button>
-              </Link>
-            </div>
           </div>
         </div>
       </div>
