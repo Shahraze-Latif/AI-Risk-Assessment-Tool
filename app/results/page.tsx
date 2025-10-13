@@ -269,13 +269,14 @@ export default function ResultsPage() {
                   riskLevel={assessment.risk_level}
                   yesCount={assessment.yes_count}
                   totalQuestions={assessment.total_questions}
+                  onDownloadPDF={generatePDF}
                 />
               </div>
 
               {/* Action Cards - Takes up 1 column on large screens */}
               <div className="space-y-6">
-                {/* Download Card */}
-                <Card className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors">
+                {/* Download Card - Hidden on mobile */}
+                <Card className="hidden lg:block border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors">
                   <CardContent className="p-6 text-center">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Download className="h-6 w-6 text-blue-600" />

@@ -1,14 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { RiskLevel, getRiskRecommendation } from '@/lib/scoring';
-import { BarChart3, CheckCircle, XCircle } from 'lucide-react';
+import { BarChart3, CheckCircle, XCircle, Download } from 'lucide-react';
 
 interface ResultSummaryProps {
   riskLevel: RiskLevel;
   yesCount: number;
   totalQuestions: number;
+  onDownloadPDF: () => void;
 }
 
-export function ResultSummary({ riskLevel, yesCount, totalQuestions }: ResultSummaryProps) {
+export function ResultSummary({ riskLevel, yesCount, totalQuestions, onDownloadPDF }: ResultSummaryProps) {
   const noCount = totalQuestions - yesCount;
   const recommendation = getRiskRecommendation(riskLevel);
   const yesPercentage = Math.round((yesCount / totalQuestions) * 100);
@@ -65,6 +67,18 @@ export function ResultSummary({ riskLevel, yesCount, totalQuestions }: ResultSum
                 style={{ width: `${yesPercentage}%` }}
               ></div>
             </div>
+          </div>
+
+          {/* Mobile Download Button - Only visible on mobile */}
+          <div className="lg:hidden mt-6 pt-6 border-t border-gray-200">
+            <Button
+              onClick={onDownloadPDF}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              size="sm"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF Report
+            </Button>
           </div>
         </CardContent>
       </Card>
