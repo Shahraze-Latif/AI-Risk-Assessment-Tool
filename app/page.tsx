@@ -39,25 +39,34 @@ export default function Home() {
               {/* Main Heading */}
               <div className="space-y-4 sm:space-y-6">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent leading-tight">
-                  AI Risk Assessment Tool
+                  AI Compliance Readiness Check <br/> (EU AI Act + US Healthcare Lens)
                 </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
-                  Evaluate your organization's AI risk exposure with our comprehensive assessment.
-                  Get instant insights, actionable recommendations, and professional reports in minutes.
+                <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 max-w-4xl mx-auto leading-relaxed px-4 sm:px-0">
+                  In <span className="text-blue-600 font-semibold">7 days</span>: a risk heatmap, prioritized 30-day plan, and client-ready PDF.
                 </p>
+                {/* <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
+                      In just <span className="text-blue-600 font-semibold">7 days</span>, receive a tailored risk heatmap, a focused 30-day action plan, and a polished client-ready PDF.
+                </p> */}
               </div>
 
-              {/* CTA Button */}
-              <div className="flex justify-center items-center pt-4 sm:pt-6 px-4 sm:px-0">
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 sm:pt-6 px-4 sm:px-0">
                 <Link href="/questionnaire" prefetch={true} className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
                     className={`w-full sm:w-auto text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg group ${animations.button.primary}`}
                   >
-                    Start Assessment
+                    Start Free Pre-Check
                     <ArrowRight className={`ml-2 h-4 w-4 sm:h-5 sm:w-5 ${animations.icon.scale}`} />
                   </Button>
                 </Link>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className={`w-full sm:w-auto text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold rounded-xl shadow-lg group ${animations.button.primary}`}
+                >
+                  Book Readiness Check
+                </Button>
               </div>
 
               {/* Trust Indicators */}
