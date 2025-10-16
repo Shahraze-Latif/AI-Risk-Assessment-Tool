@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS readiness_checks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),
-  status text DEFAULT 'pending' CHECK (status IN ('pending', 'payment_pending', 'paid', 'cancelled')),
+  status text DEFAULT 'pending' CHECK (status IN ('pending', 'payment_pending', 'paid', 'cancelled', 'processing', 'completed')),
   stripe_session_id text,
   client_email text,
   client_name text,
