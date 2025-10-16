@@ -60,13 +60,15 @@ export default function Home() {
                     <ArrowRight className={`ml-2 h-4 w-4 sm:h-5 sm:w-5 ${animations.icon.scale}`} />
                   </Button>
                 </Link>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className={`w-full sm:w-auto text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold rounded-xl shadow-lg group ${animations.button.primary}`}
-                >
-                  Book Readiness Check
-                </Button>
+                <Link href="/checkout" prefetch={true} className="w-full sm:w-auto">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className={`w-full sm:w-auto text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold rounded-xl shadow-lg group ${animations.button.primary}`}
+                  >
+                    Book Readiness Check
+                  </Button>
+                </Link>
               </div>
 
               {/* Trust Indicators */}
