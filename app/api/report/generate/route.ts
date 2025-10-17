@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import { initializeGoogleAPIs, TEMPLATE_DOC_ID, GOOGLE_DRIVE_FOLDER_ID, PLACEHOLDERS } from '@/lib/googleApis';
+import { initializeGoogleAPIs } from '@/lib/googleApis';
+import { GOOGLE_CONFIG, PLACEHOLDERS } from '@/lib/config';
 
 interface ReportGenerationRequest {
   clientId: string;
@@ -96,7 +97,7 @@ async function generateReport(docs: any, drive: any, data: ReportData): Promise<
   try {
     // Copy the template document
     const copyResponse = await drive.files.copy({
-      fileId: TEMPLATE_DOC_ID,
+      fileId: GOOGLE_CONFIG.TEMPLATE_DOC_ID,
       requestBody: {
         name: `Client_ReadinessCheck_${new Date().toISOString().split('T')[0]}.pdf`
       }
@@ -124,7 +125,7 @@ async function generateReport(docs: any, drive: any, data: ReportData): Promise<
     const uploadResponse = await drive.files.create({
       requestBody: {
         name: pdfFileName,
-        parents: [GOOGLE_DRIVE_FOLDER_ID] // Use the configured Drive folder ID
+        parents: [GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID] // Use the configured Drive folder ID
       },
       media: {
         mimeType: 'application/pdf',

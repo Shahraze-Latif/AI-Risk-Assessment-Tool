@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import { initializeGoogleAPIs, GOOGLE_CONFIG } from '@/lib/googleApis';
+import { initializeGoogleAPIs } from '@/lib/googleApis';
+import { GOOGLE_CONFIG } from '@/lib/config';
 import dayjs from 'dayjs';
 
 interface GenerateReportRequest {
