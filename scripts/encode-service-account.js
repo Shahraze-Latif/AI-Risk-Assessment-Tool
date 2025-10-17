@@ -1,22 +1,21 @@
-const fs = require('fs');
-const path = require('path');
-
-// Read the service account file
-const serviceAccountPath = path.join(__dirname, '..', 'polar-scarab-475321-g9-e4b4bce58708.json');
-const serviceAccountData = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-
-// Create a properly formatted single-line JSON
-const formattedKey = JSON.stringify(serviceAccountData);
-
-console.log('🔑 Formatted Service Account Key for Vercel:');
-console.log('='.repeat(80));
-console.log(formattedKey);
-console.log('='.repeat(80));
-console.log('\n📋 Instructions:');
-console.log('1. Copy the JSON above (between the === lines)');
-console.log('2. Go to Vercel Dashboard → Your Project → Settings → Environment Variables');
-console.log('3. Find GOOGLE_SERVICE_ACCOUNT_KEY');
-console.log('4. Replace the value with the copied JSON');
-console.log('5. Click Save');
-console.log('6. Redeploy your application');
-console.log('\n✅ This should fix the "Invalid JWT Signature" error!');
+console.log('🔑 Service Account Key Formatter');
+console.log('='.repeat(50));
+console.log('⚠️  SECURITY NOTICE: Service account key files have been removed for security.');
+console.log('');
+console.log('📋 Manual Instructions:');
+console.log('1. Copy your service account JSON from Google Cloud Console');
+console.log('2. Paste it into a JSON formatter (like jsonlint.com)');
+console.log('3. Copy the minified/single-line version');
+console.log('4. Go to Vercel Dashboard → Your Project → Settings → Environment Variables');
+console.log('5. Find GOOGLE_SERVICE_ACCOUNT_KEY');
+console.log('6. Replace the value with the minified JSON');
+console.log('7. Click Save');
+console.log('8. Redeploy your application');
+console.log('');
+console.log('✅ This should fix the "Invalid JWT Signature" error!');
+console.log('');
+console.log('🔧 Alternative: Use online JSON formatter:');
+console.log('   - Go to: https://jsonlint.com/');
+console.log('   - Paste your service account JSON');
+console.log('   - Copy the minified output');
+console.log('   - Use that in Vercel environment variables');
