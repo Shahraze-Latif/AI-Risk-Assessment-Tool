@@ -63,9 +63,9 @@ Create a `.env.local` file in your project root:
 ```bash
 # Copy this template and fill in your values
 GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
-GOOGLE_TEMPLATE_DOC_ID=1oG64k9qBy8r8lLJkMS5HF4yxwfXCXYPWxtag9Ubj3XQ
-GOOGLE_SHEET_ID=1tBb8JeP-x8u2zidMMUetLmpofHczGknkOSlhrpv5_B0
-GOOGLE_DRIVE_FOLDER_ID=1Qgg1pgcgS20dLBcDqfJm6YJReGzX1Lyh
+GOOGLE_TEMPLATE_DOC_ID=1sdcsdc
+GOOGLE_SHEET_ID=scsc
+GOOGLE_DRIVE_FOLDER_ID=sdcs
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -96,9 +96,9 @@ Ensure `.env.local` is in your `.gitignore`:
 | Variable Name | Value | Environment |
 |---------------|-------|-------------|
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | `{"type":"service_account",...}` | Production |
-| `GOOGLE_TEMPLATE_DOC_ID` | `1oG64k9qBy8r8lLJkMS5HF4yxwfXCXYPWxtag9Ubj3XQ` | Production |
-| `GOOGLE_SHEET_ID` | `1tBb8JeP-x8u2zidMMUetLmpofHczGknkOSlhrpv5_B0` | Production |
-| `GOOGLE_DRIVE_FOLDER_ID` | `1Qgg1pgcgS20dLBcDqfJm6YJReGzX1Lyh` | Production |
+| `GOOGLE_TEMPLATE_DOC_ID` | `sdd` | Production |
+| `GOOGLE_SHEET_ID` | `1tBb8JeP-sdcssc` | Production |
+| `GOOGLE_DRIVE_FOLDER_ID` | `sdcs` | Production |
 | `STRIPE_SECRET_KEY` | `sk_live_your_stripe_secret_key` | Production |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_your_webhook_secret` | Production |
 | `NEXT_PUBLIC_SUPABASE_URL` | `your_supabase_url` | Production |
