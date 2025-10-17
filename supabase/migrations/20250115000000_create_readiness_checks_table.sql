@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS readiness_checks (
   stripe_session_id text,
   client_email text,
   client_name text,
-  assessment_data jsonb
+  assessment_data jsonb,
+  report_url text
 );
 
 ALTER TABLE readiness_checks ENABLE ROW LEVEL SECURITY;
