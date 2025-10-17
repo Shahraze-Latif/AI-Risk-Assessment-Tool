@@ -9,36 +9,104 @@ interface GenerateReportRequest {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 Starting report generation...');
+  
   try {
     const body: GenerateReportRequest = await request.json();
     const { readinessCheckId } = body;
 
+    console.log('📋 Readiness Check ID:', readinessCheckId);
+
     if (!readinessCheckId) {
-      return NextResponse.json({ error: 'Readiness check ID is required' }, { status: 400 });
+      console.error('❌ No readiness check ID provided');
+      return NextResponse.json({ 
+        error: 'Readiness check ID is required',
+        details: 'No readinessCheckId provided in request body'
+      }, { status: 400 });
     }
 
+    // Validate environment variables
+    console.log('🔧 Validating environment variables...');
+    const envValidation = validateEnvironmentVariables();
+    if (!envValidation.valid) {
+      console.error('❌ Environment validation failed:', envValidation.errors);
+      return NextResponse.json({ 
+        error: 'Configuration error',
+        details: envValidation.errors
+      }, { status: 500 });
+    }
+    console.log('✅ Environment variables validated');
+
     // Fetch the readiness check record from Supabase
+    console.log('📊 Fetching readiness check from Supabase...');
     const { data: readinessCheck, error: fetchError } = await supabase
       .from('readiness_checks')
       .select('*')
       .eq('id', readinessCheckId)
       .single();
 
-    if (fetchError || !readinessCheck) {
-      return NextResponse.json({ error: 'Readiness check not found' }, { status: 404 });
+    if (fetchError) {
+      console.error('❌ Supabase fetch error:', fetchError);
+      return NextResponse.json({ 
+        error: 'Database error',
+        details: `Failed to fetch readiness check: ${fetchError.message}`
+      }, { status: 500 });
     }
 
+    if (!readinessCheck) {
+      console.error('❌ Readiness check not found');
+      return NextResponse.json({ 
+        error: 'Readiness check not found',
+        details: `No record found with ID: ${readinessCheckId}`
+      }, { status: 404 });
+    }
+
+    console.log('✅ Readiness check found:', {
+      id: readinessCheck.id,
+      status: readinessCheck.status,
+      hasAssessmentData: !!readinessCheck.assessment_data
+    });
+
     if (!readinessCheck.assessment_data) {
-      return NextResponse.json({ error: 'Assessment data not found' }, { status: 400 });
+      console.error('❌ No assessment data found');
+      return NextResponse.json({ 
+        error: 'Assessment data not found',
+        details: 'The readiness check record exists but contains no assessment data'
+      }, { status: 400 });
     }
 
     // Initialize Google APIs
-    const { docs, drive } = initializeGoogleAPIs();
+    console.log('🔌 Initializing Google APIs...');
+    let docs, drive;
+    try {
+      const googleAPIs = initializeGoogleAPIs();
+      docs = googleAPIs.docs;
+      drive = googleAPIs.drive;
+      console.log('✅ Google APIs initialized successfully');
+    } catch (googleError) {
+      console.error('❌ Google APIs initialization failed:', googleError);
+      return NextResponse.json({ 
+        error: 'Google APIs initialization failed',
+        details: googleError instanceof Error ? googleError.message : 'Unknown Google API error'
+      }, { status: 500 });
+    }
 
     // Generate the report
-    const reportUrl = await generateReport(docs, drive, readinessCheck);
+    console.log('📄 Starting report generation...');
+    let reportUrl;
+    try {
+      reportUrl = await generateReport(docs, drive, readinessCheck);
+      console.log('✅ Report generated successfully:', reportUrl);
+    } catch (reportError) {
+      console.error('❌ Report generation failed:', reportError);
+      return NextResponse.json({ 
+        error: 'Report generation failed',
+        details: reportError instanceof Error ? reportError.message : 'Unknown report generation error'
+      }, { status: 500 });
+    }
 
     // Update the readiness check record with report URL
+    console.log('💾 Updating Supabase with report URL...');
     const { error: updateError } = await supabase
       .from('readiness_checks')
       .update({
@@ -49,83 +117,203 @@ export async function POST(request: NextRequest) {
       .eq('id', readinessCheckId);
 
     if (updateError) {
-      console.error('Error updating readiness check:', updateError);
-      return NextResponse.json({ error: 'Failed to update record with report URL' }, { status: 500 });
+      console.error('❌ Supabase update error:', updateError);
+      return NextResponse.json({ 
+        error: 'Failed to update record with report URL',
+        details: `Report generated but failed to save URL: ${updateError.message}`
+      }, { status: 500 });
     }
 
+    console.log('✅ Report generation completed successfully');
     return NextResponse.json({
       success: true,
-      report_url: reportUrl
+      report_url: reportUrl,
+      message: 'Report generated and saved successfully'
     });
 
   } catch (error) {
-    console.error('Error generating report:', error);
-    return NextResponse.json({ error: 'Failed to generate report' }, { status: 500 });
+    console.error('❌ Unexpected error in report generation:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error occurred'
+    }, { status: 500 });
   }
 }
 
+function validateEnvironmentVariables() {
+  const errors: string[] = [];
+  
+  // Check required environment variables
+  const requiredVars = [
+    'GOOGLE_SERVICE_ACCOUNT_KEY',
+    'GOOGLE_TEMPLATE_DOC_ID',
+    'GOOGLE_DRIVE_FOLDER_ID'
+  ];
+  
+  for (const varName of requiredVars) {
+    if (!process.env[varName]) {
+      errors.push(`Missing environment variable: ${varName}`);
+    }
+  }
+  
+  // Validate Google Service Account Key format
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    try {
+      const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      if (!key.type || !key.project_id || !key.private_key) {
+        errors.push('GOOGLE_SERVICE_ACCOUNT_KEY is not a valid service account JSON');
+      }
+    } catch (e) {
+      errors.push('GOOGLE_SERVICE_ACCOUNT_KEY is not valid JSON');
+    }
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
 async function generateReport(docs: any, drive: any, readinessCheck: any): Promise<string> {
+  console.log('📄 Starting report generation process...');
+  
   try {
     const assessmentData = readinessCheck.assessment_data;
     const clientName = readinessCheck.client_name || 'Client';
     const currentDate = dayjs().format('MMMM D, YYYY');
 
-    // Copy the template document
-    const copyResponse = await drive.files.copy({
-      fileId: GOOGLE_CONFIG.TEMPLATE_DOC_ID,
-      requestBody: {
-        name: `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}`
-      }
+    console.log('📊 Assessment data:', {
+      hasAreaScores: !!assessmentData.area_scores,
+      hasWeightedScore: !!assessmentData.weighted_score,
+      hasOverallLabel: !!assessmentData.overall_label,
+      hasPlan: !!assessmentData.plan
     });
+
+    // Step 1: Copy the template document
+    console.log('📋 Copying template document...');
+    console.log('🔗 Template ID:', GOOGLE_CONFIG.TEMPLATE_DOC_ID);
+    
+    let copyResponse;
+    try {
+      copyResponse = await drive.files.copy({
+        fileId: GOOGLE_CONFIG.TEMPLATE_DOC_ID,
+        requestBody: {
+          name: `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}`
+        }
+      });
+    } catch (copyError) {
+      console.error('❌ Failed to copy template:', copyError);
+      throw new Error(`Failed to copy template document: ${copyError instanceof Error ? copyError.message : 'Unknown error'}`);
+    }
 
     const newDocId = copyResponse.data.id;
-    console.log('Created new document:', newDocId);
+    if (!newDocId) {
+      throw new Error('Template copy failed - no document ID returned');
+    }
+    console.log('✅ Template copied successfully:', newDocId);
 
-    // Prepare replacement data
-    const replacements = await prepareReplacements(assessmentData, clientName, currentDate);
+    // Step 2: Prepare replacement data
+    console.log('🔄 Preparing replacement data...');
+    let replacements;
+    try {
+      replacements = await prepareReplacements(assessmentData, clientName, currentDate);
+      console.log('✅ Replacement data prepared:', Object.keys(replacements));
+    } catch (replaceError) {
+      console.error('❌ Failed to prepare replacements:', replaceError);
+      throw new Error(`Failed to prepare replacement data: ${replaceError instanceof Error ? replaceError.message : 'Unknown error'}`);
+    }
 
-    // Replace placeholders in the document
-    await replacePlaceholders(docs, newDocId, replacements);
+    // Step 3: Replace placeholders in the document
+    console.log('✏️ Replacing placeholders in document...');
+    try {
+      await replacePlaceholders(docs, newDocId, replacements);
+      console.log('✅ Placeholders replaced successfully');
+    } catch (placeholderError) {
+      console.error('❌ Failed to replace placeholders:', placeholderError);
+      throw new Error(`Failed to replace placeholders: ${placeholderError instanceof Error ? placeholderError.message : 'Unknown error'}`);
+    }
 
-    // Export as PDF
-    const pdfResponse = await drive.files.export({
-      fileId: newDocId,
-      mimeType: 'application/pdf'
-    }, {
-      responseType: 'stream'
-    });
+    // Step 4: Export as PDF
+    console.log('📄 Exporting document as PDF...');
+    let pdfResponse;
+    try {
+      pdfResponse = await drive.files.export({
+        fileId: newDocId,
+        mimeType: 'application/pdf'
+      }, {
+        responseType: 'stream'
+      });
+      console.log('✅ Document exported as PDF');
+    } catch (exportError) {
+      console.error('❌ Failed to export PDF:', exportError);
+      throw new Error(`Failed to export PDF: ${exportError instanceof Error ? exportError.message : 'Unknown error'}`);
+    }
 
-    // Upload PDF to Drive
+    // Step 5: Upload PDF to Drive
+    console.log('☁️ Uploading PDF to Google Drive...');
+    console.log('📁 Target folder ID:', GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID);
+    
     const pdfFileName = `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}.pdf`;
-    const uploadResponse = await drive.files.create({
-      requestBody: {
-        name: pdfFileName,
-        parents: [GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID]
-      },
-      media: {
-        mimeType: 'application/pdf',
-        body: pdfResponse.data
-      }
-    });
+    let uploadResponse;
+    try {
+      uploadResponse = await drive.files.create({
+        requestBody: {
+          name: pdfFileName,
+          parents: [GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID]
+        },
+        media: {
+          mimeType: 'application/pdf',
+          body: pdfResponse.data
+        }
+      });
+      console.log('✅ PDF uploaded successfully:', uploadResponse.data.id);
+    } catch (uploadError) {
+      console.error('❌ Failed to upload PDF:', uploadError);
+      throw new Error(`Failed to upload PDF to Drive: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
+    }
 
-    // Make the file publicly accessible
-    await drive.permissions.create({
-      fileId: uploadResponse.data.id,
-      requestBody: {
-        role: 'reader',
-        type: 'anyone'
-      }
-    });
+    const uploadedFileId = uploadResponse.data.id;
+    if (!uploadedFileId) {
+      throw new Error('PDF upload failed - no file ID returned');
+    }
 
-    // Clean up the temporary document
-    await drive.files.delete({
-      fileId: newDocId
-    });
+    // Step 6: Make the file publicly accessible
+    console.log('🔓 Setting file permissions...');
+    try {
+      await drive.permissions.create({
+        fileId: uploadedFileId,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone'
+        }
+      });
+      console.log('✅ File permissions set successfully');
+    } catch (permissionError) {
+      console.error('❌ Failed to set permissions:', permissionError);
+      // Don't throw here - the file is uploaded, just not publicly accessible
+      console.warn('⚠️ File uploaded but permissions failed - file may not be publicly accessible');
+    }
 
-    return `https://drive.google.com/file/d/${uploadResponse.data.id}/view`;
+    // Step 7: Clean up the temporary document
+    console.log('🧹 Cleaning up temporary document...');
+    try {
+      await drive.files.delete({
+        fileId: newDocId
+      });
+      console.log('✅ Temporary document deleted');
+    } catch (cleanupError) {
+      console.error('❌ Failed to delete temporary document:', cleanupError);
+      // Don't throw here - the main process succeeded
+      console.warn('⚠️ Report generated but cleanup failed');
+    }
+
+    const reportUrl = `https://drive.google.com/file/d/${uploadedFileId}/view`;
+    console.log('🎉 Report generation completed successfully:', reportUrl);
+    
+    return reportUrl;
 
   } catch (error) {
-    console.error('Error in generateReport:', error);
+    console.error('❌ Error in generateReport:', error);
     throw error;
   }
 }
