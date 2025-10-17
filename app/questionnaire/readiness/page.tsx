@@ -226,7 +226,8 @@ export default function ReadinessQuestionnairePage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/readiness-check', {
+      // First, submit the assessment
+      const assessmentResponse = await fetch('/api/readiness-check', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,10 +238,28 @@ export default function ReadinessQuestionnairePage() {
         }),
       });
 
-      if (response.ok) {
+      if (!assessmentResponse.ok) {
+        throw new Error('Failed to submit assessment');
+      }
+
+      const assessmentData = await assessmentResponse.json();
+      
+      // Then, generate the report
+      const reportResponse = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          readinessCheckId: assessmentData.readinessCheckId
+        }),
+      });
+
+      if (reportResponse.ok) {
         setSubmitted(true);
       } else {
-        throw new Error('Failed to submit assessment');
+        console.warn('Assessment saved but report generation failed');
+        setSubmitted(true); // Still show success since assessment was saved
       }
     } catch (error) {
       console.error('Error submitting assessment:', error);
