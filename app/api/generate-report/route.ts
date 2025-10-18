@@ -210,26 +210,49 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
     // Step 1: Copy the template document
     console.log('📋 STEP 1: Copying template document...');
     console.log('🔗 Template ID:', GOOGLE_CONFIG.TEMPLATE_DOC_ID);
+    console.log('📁 Target folder ID:', GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID);
     
     let copyResponse;
     try {
+      // Try copying directly to the shared folder first
       copyResponse = await drive.files.copy({
         fileId: GOOGLE_CONFIG.TEMPLATE_DOC_ID,
         requestBody: {
-          name: `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}`
-          // Don't specify parents - let it go to service account's root
+          name: `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}`,
+          parents: [GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID]
         }
       });
-      console.log('✅ STEP 1 SUCCESS: Template copied successfully');
+      console.log('✅ STEP 1 SUCCESS: Template copied to shared folder');
       console.log('📄 New document ID:', copyResponse.data.id);
     } catch (copyError) {
-      console.error('❌ STEP 1 FAILED: Failed to copy template');
+      console.error('❌ STEP 1 FAILED: Failed to copy to shared folder');
       console.error('🔍 Copy error details:', {
         message: copyError instanceof Error ? copyError.message : 'Unknown error',
         code: copyError instanceof Error ? (copyError as any).code : 'No code',
         status: copyError instanceof Error ? (copyError as any).status : 'No status'
       });
-      throw new Error(`STEP_1_COPY_FAILED: ${copyError instanceof Error ? copyError.message : 'Unknown copy error'}`);
+      
+      // Fallback: Copy to service account's root and transfer ownership
+      console.log('🔄 Trying fallback: Copy to service account root...');
+      try {
+        copyResponse = await drive.files.copy({
+          fileId: GOOGLE_CONFIG.TEMPLATE_DOC_ID,
+          requestBody: {
+            name: `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}`
+            // No parents - goes to service account's root
+          }
+        });
+        console.log('✅ STEP 1 SUCCESS: Template copied to service account root');
+        console.log('📄 New document ID:', copyResponse.data.id);
+      } catch (fallbackError) {
+        console.error('❌ STEP 1 FAILED: Both copy attempts failed');
+        console.error('🔍 Fallback error details:', {
+          message: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
+          code: fallbackError instanceof Error ? (fallbackError as any).code : 'No code',
+          status: fallbackError instanceof Error ? (fallbackError as any).status : 'No status'
+        });
+        throw new Error(`STEP_1_COPY_FAILED: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown copy error'}`);
+      }
     }
 
     const newDocId = copyResponse.data.id;
@@ -242,7 +265,7 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
     console.log('🔄 Transferring ownership to human account...');
     try {
       await drive.permissions.create({
-        fileId: newDocId,
+        fileId: newDocId as string,
         requestBody: {
           role: "writer",
           type: "user",
@@ -274,7 +297,7 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
     // Step 3: Replace placeholders in the document
     console.log('✏️ STEP 3: Replacing placeholders in document...');
     try {
-      await replacePlaceholders(docs, newDocId, replacements);
+      await replacePlaceholders(docs, newDocId as string, replacements);
       console.log('✅ STEP 3 SUCCESS: Placeholders replaced successfully');
     } catch (placeholderError) {
       console.error('❌ STEP 3 FAILED: Failed to replace placeholders');
@@ -291,7 +314,7 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
     let pdfResponse;
     try {
       pdfResponse = await drive.files.export({
-        fileId: newDocId,
+        fileId: newDocId as string,
         mimeType: 'application/pdf'
       }, {
         responseType: 'stream'
@@ -394,7 +417,7 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
     console.log('🧹 STEP 7: Cleaning up temporary document...');
     try {
       await drive.files.delete({
-        fileId: newDocId
+        fileId: newDocId as string
       });
       console.log('✅ STEP 7 SUCCESS: Temporary document deleted');
     } catch (cleanupError) {
