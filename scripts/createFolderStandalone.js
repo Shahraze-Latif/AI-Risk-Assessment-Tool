@@ -8,7 +8,8 @@
  * This version doesn't depend on the Next.js build system
  */
 
-import { google } from 'googleapis';
+import { getGoogleAPIs } from '../lib/google/client.js';
+import { GOOGLE_CONFIG } from '../lib/google/config.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -51,29 +52,7 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
-function initializeGoogleAPIs() {
-  const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-
-  if (!serviceAccountKey) {
-    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY environment variable is required');
-  }
-
-  const credentials = JSON.parse(serviceAccountKey);
-
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: [
-      'https://www.googleapis.com/auth/documents',
-      'https://www.googleapis.com/auth/drive',
-      'https://www.googleapis.com/auth/drive.file'
-    ]
-  });
-
-  const docs = google.docs({ version: 'v1', auth });
-  const drive = google.drive({ version: 'v3', auth });
-
-  return { docs, drive, auth };
-}
+// Google APIs are now handled by the centralized client
 
 async function createDriveFolder() {
   try {
@@ -97,7 +76,7 @@ async function createDriveFolder() {
     console.log('🔑 Initializing Google APIs...');
     let drive;
     try {
-      const { drive: driveAPI } = initializeGoogleAPIs();
+      const { drive: driveAPI } = getGoogleAPIs();
       drive = driveAPI;
       console.log('✅ Google APIs initialized successfully');
     } catch (initError) {
