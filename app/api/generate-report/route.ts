@@ -217,6 +217,7 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
         fileId: GOOGLE_CONFIG.TEMPLATE_DOC_ID,
         requestBody: {
           name: `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}`
+          // Don't specify parents - let it go to service account's root
         }
       });
       console.log('✅ STEP 1 SUCCESS: Template copied successfully');
@@ -296,6 +297,7 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
     const pdfFileName = `Client_ReadinessCheck_${dayjs().format('YYYY-MM-DD')}.pdf`;
     let uploadResponse;
     try {
+      // Try uploading to the specified folder first
       uploadResponse = await drive.files.create({
         requestBody: {
           name: pdfFileName,
@@ -306,16 +308,40 @@ async function generateReportWithDebug(docs: any, drive: any, readinessCheck: an
           body: pdfResponse.data
         }
       });
-      console.log('✅ STEP 5 SUCCESS: PDF uploaded successfully');
+      console.log('✅ STEP 5 SUCCESS: PDF uploaded to specified folder');
       console.log('📄 Uploaded file ID:', uploadResponse.data.id);
     } catch (uploadError) {
-      console.error('❌ STEP 5 FAILED: Failed to upload PDF');
+      console.error('❌ STEP 5 FAILED: Failed to upload to specified folder');
       console.error('🔍 Upload error details:', {
         message: uploadError instanceof Error ? uploadError.message : 'Unknown error',
         code: uploadError instanceof Error ? (uploadError as any).code : 'No code',
         status: uploadError instanceof Error ? (uploadError as any).status : 'No status'
       });
-      throw new Error(`STEP_5_UPLOAD_FAILED: ${uploadError instanceof Error ? uploadError.message : 'Unknown upload error'}`);
+      
+      // Try uploading to service account's root folder as fallback
+      console.log('🔄 Trying fallback: Upload to service account root folder...');
+      try {
+        uploadResponse = await drive.files.create({
+          requestBody: {
+            name: pdfFileName
+            // No parents specified - goes to service account's root
+          },
+          media: {
+            mimeType: 'application/pdf',
+            body: pdfResponse.data
+          }
+        });
+        console.log('✅ STEP 5 SUCCESS: PDF uploaded to service account root');
+        console.log('📄 Uploaded file ID:', uploadResponse.data.id);
+      } catch (fallbackError) {
+        console.error('❌ STEP 5 FAILED: Both upload attempts failed');
+        console.error('🔍 Fallback error details:', {
+          message: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
+          code: fallbackError instanceof Error ? (fallbackError as any).code : 'No code',
+          status: fallbackError instanceof Error ? (fallbackError as any).status : 'No status'
+        });
+        throw new Error(`STEP_5_UPLOAD_FAILED: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown upload error'}`);
+      }
     }
 
     const uploadedFileId = uploadResponse.data.id;
