@@ -17,6 +17,9 @@ This guide covers all environment variables needed for the AI Compliance Readine
 # Google Service Account Key (JSON format)
 GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"your-project-id","private_key_id":"...","private_key":"...","client_email":"...","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"..."}
 
+# Google Service Account Email (REQUIRED - for ownership transfers)
+GOOGLE_SERVICE_ACCOUNT_EMAIL=ai-readiness-service@ai-compliance-readiness.iam.gserviceaccount.com
+
 # Google Template Document ID (REQUIRED - no fallback)
 GOOGLE_TEMPLATE_DOC_ID=your_template_document_id_here
 
@@ -63,6 +66,7 @@ Create a `.env.local` file in your project root:
 ```bash
 # Copy this template and fill in your values
 GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+GOOGLE_SERVICE_ACCOUNT_EMAIL=ai-readiness-service@ai-compliance-readiness.iam.gserviceaccount.com
 GOOGLE_TEMPLATE_DOC_ID=1sdcsdc
 GOOGLE_SHEET_ID=scsc
 GOOGLE_DRIVE_FOLDER_ID=sdcs
@@ -96,6 +100,7 @@ Ensure `.env.local` is in your `.gitignore`:
 | Variable Name | Value | Environment |
 |---------------|-------|-------------|
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | `{"type":"service_account",...}` | Production |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `ai-readiness-service@ai-compliance-readiness.iam.gserviceaccount.com` | Production |
 | `GOOGLE_TEMPLATE_DOC_ID` | `sdd` | Production |
 | `GOOGLE_SHEET_ID` | `1tBb8JeP-sdcssc` | Production |
 | `GOOGLE_DRIVE_FOLDER_ID` | `sdcs` | Production |

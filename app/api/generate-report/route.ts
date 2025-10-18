@@ -241,6 +241,29 @@ async function generateReport(docs: any, drive: any, readinessCheck: any): Promi
     if (!newDocId) {
       throw new Error('No document ID returned from copy operation');
     }
+
+    // Transfer ownership to service account to avoid storage quota issues
+    console.log('🔄 Transferring ownership to service account...');
+    try {
+      const serviceAccountEmail = GOOGLE_CONFIG.SERVICE_ACCOUNT_EMAIL;
+      if (serviceAccountEmail) {
+        await drive.permissions.create({
+          fileId: newDocId,
+          requestBody: {
+            role: "writer",
+            type: "user",
+            emailAddress: serviceAccountEmail
+          }
+        });
+        console.log('✅ Ownership transferred to service account:', serviceAccountEmail);
+      } else {
+        console.warn('⚠️ GOOGLE_SERVICE_ACCOUNT_EMAIL not configured - skipping ownership transfer');
+      }
+    } catch (ownershipError) {
+      console.error('❌ Failed to transfer ownership:', ownershipError);
+      // Don't throw here - continue with the process
+      console.warn('⚠️ Continuing without ownership transfer - may cause quota issues');
+    }
   } catch (copyError) {
     const error = handleGoogleAPIError(
       copyError,

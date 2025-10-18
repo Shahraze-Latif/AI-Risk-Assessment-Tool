@@ -12,7 +12,10 @@ export const GOOGLE_CONFIG = {
   GOOGLE_SHEET_ID: process.env.GOOGLE_SHEET_ID,
   
   // Google Drive folder ID for report storage
-  GOOGLE_DRIVE_FOLDER_ID: process.env.GOOGLE_DRIVE_FOLDER_ID
+  GOOGLE_DRIVE_FOLDER_ID: process.env.GOOGLE_DRIVE_FOLDER_ID,
+  
+  // Service account email for ownership transfers and permissions
+  SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
 };
 
 // Template placeholders
@@ -52,6 +55,10 @@ export function validateGoogleConfig() {
   
   if (!GOOGLE_CONFIG.GOOGLE_DRIVE_FOLDER_ID) {
     missing.push('GOOGLE_DRIVE_FOLDER_ID');
+  }
+  
+  if (!GOOGLE_CONFIG.SERVICE_ACCOUNT_EMAIL) {
+    missing.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
   }
   
   if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {

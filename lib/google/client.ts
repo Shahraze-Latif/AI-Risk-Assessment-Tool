@@ -87,6 +87,15 @@ export function initializeGoogleAPIs(): GoogleClient {
     console.log('✅ Google APIs initialized successfully');
     console.log('🔑 Service account:', credentials.client_email);
     console.log('🆔 Project ID:', credentials.project_id);
+    
+    // Validate service account email matches environment variable
+    const expectedEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    if (expectedEmail && credentials.client_email !== expectedEmail) {
+      console.warn('⚠️ Service account email mismatch:');
+      console.warn(`   Expected: ${expectedEmail}`);
+      console.warn(`   Found: ${credentials.client_email}`);
+      console.warn('   Please update GOOGLE_SERVICE_ACCOUNT_EMAIL environment variable');
+    }
 
     return googleClient;
 
