@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText } from 'lucide-react';
 import { animations } from '@/lib/animations';
+import { generateClientPDF, formatReportData } from '@/lib/clientPdfGenerator';
 
 interface Question {
   id: string;
@@ -244,23 +245,19 @@ export default function ReadinessQuestionnairePage() {
 
       const assessmentData = await assessmentResponse.json();
       
-      // Then, generate the report
-      const reportResponse = await fetch('/api/generate-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          readinessCheckId: assessmentData.readinessCheckId
-        }),
-      });
-
-      if (reportResponse.ok) {
-        setSubmitted(true);
-      } else {
-        console.warn('Assessment saved but report generation failed');
-        setSubmitted(true); // Still show success since assessment was saved
-      }
+      // Generate PDF directly in the browser
+      console.log('📄 Generating PDF report...');
+      const reportData = formatReportData(
+        assessmentData.result,
+        assessmentData.clientName || 'Client'
+      );
+      
+      await generateClientPDF(
+        reportData,
+        `Client_ReadinessCheck_${new Date().toISOString().split('T')[0]}.pdf`
+      );
+      
+      setSubmitted(true);
     } catch (error) {
       console.error('Error submitting assessment:', error);
       alert('Failed to submit assessment. Please try again.');

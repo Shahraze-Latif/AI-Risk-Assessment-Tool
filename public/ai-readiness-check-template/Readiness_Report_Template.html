@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <style type="text/css">
+      @import url(https://themes.googleusercontent.com/fonts/css?kit=fpjTOVmNbO4Lz34iLyptLUXza5VhXqVC6o75Eld_V98);
+
+      ol {
+        margin: 0;
+        padding: 0;
+      }
+
+      table td,
+      table th {
+        padding: 0;
+      }
+
+      .c11 {
+        background-color: #ffffff;
+        max-width: 468pt;
+        padding: 72pt;
+      }
+
+      .c14 {
+        color: #366091;
+        font-weight: 700;
+        font-size: 14pt;
+        font-family: "Calibri";
+      }
+
+      .c6 {
+        color: #4f81bd;
+        font-weight: 700;
+        font-size: 13pt;
+        font-family: "Calibri";
+      }
+
+      .c7 {
+        color: #4f81bd;
+        font-weight: 700;
+        font-size: 11pt;
+        font-family: "Calibri";
+      }
+
+      .c2 {
+        color: #000000;
+        font-weight: 400;
+        font-size: 11pt;
+        font-family: "Calibri";
+      }
+
+      .c13 {
+        color: #000000;
+        font-weight: 400;
+        font-size: 11pt;
+        font-family: "Arial";
+      }
+
+      .c0,
+      .c8 {
+        padding-top: 0pt;
+        padding-bottom: 10pt;
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      .c10,
+      .c12 {
+        padding-top: 10pt;
+        padding-bottom: 0pt;
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      .c5 {
+        border-spacing: 0;
+        border-collapse: collapse;
+        margin-left: -5.8pt;
+        margin-right: auto;
+      }
+
+      .c4,
+      .c3 {
+        border-style: solid;
+        border-width: 0pt;
+        padding: 0pt 5.8pt;
+        border-color: #000000;
+        vertical-align: top;
+      }
+
+      .c4 {
+        width: 144pt;
+      }
+
+      .c3 {
+        width: 86.4pt;
+      }
+
+      .c1 {
+        height: 11pt;
+      }
+
+      .c9 {
+        height: 0pt;
+      }
+
+      h1 {
+        padding-top: 20pt;
+        color: #000000;
+        font-size: 20pt;
+        padding-bottom: 6pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      h2 {
+        padding-top: 18pt;
+        color: #000000;
+        font-size: 16pt;
+        padding-bottom: 6pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      h3 {
+        padding-top: 16pt;
+        color: #434343;
+        font-size: 14pt;
+        padding-bottom: 4pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      h4 {
+        padding-top: 14pt;
+        color: #666666;
+        font-size: 12pt;
+        padding-bottom: 4pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+    </style>
+  </head>
+
+  <body class="c11 doc-content">
+    <h1 class="c12">
+      <span class="c14">AI Compliance Readiness Check</span>
+    </h1>
+
+    <p class="c0"><span class="c2">Client: {{ClientName}}</span></p>
+    <p class="c0"><span class="c2">Date: {{ReportDate}}</span></p>
+    <p class="c0"><span class="c2">Confidential — For internal use only.</span></p>
+
+    <h2 class="c10"><span class="c6">Executive Summary</span></h2>
+    <p class="c0"><span class="c2">Top Risks: {{TopRisks}}</span></p>
+    <p class="c0"><span class="c2">Quick Wins: {{QuickWins}}</span></p>
+
+    <h2 class="c10"><span class="c6">Risk Heatmap</span></h2>
+    <table class="c5">
+      <tr class="c9">
+        <td class="c4"><p class="c0"><span class="c2">Control Area</span></p></td>
+        <td class="c4"><p class="c0"><span class="c2">Level (L/M/H)</span></p></td>
+        <td class="c4"><p class="c0"><span class="c2">Notes</span></p></td>
+      </tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Governance</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Governance_Level}}</span></p></td><td class="c4"></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Data</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Data_Level}}</span></p></td><td class="c4"></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Security</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Security_Level}}</span></p></td><td class="c4"></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Vendors</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Vendors_Level}}</span></p></td><td class="c4"></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Human Oversight</span></p></td><td class="c4"><p class="c0"><span class="c2">{{HumanOversight_Level}}</span></p></td><td class="c4"></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Transparency</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Transparency_Level}}</span></p></td><td class="c4"></td></tr>
+    </table>
+
+    <p class="c0"><span class="c2">Legend: Low = 0–1, Medium = 2, High = 3</span></p>
+
+    <h2 class="c10"><span class="c6">Findings by Area</span></h2>
+
+    <h3 class="c10"><span class="c7">Governance</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Governance_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Governance_Findings}}</span></p>
+
+    <h3 class="c10"><span class="c7">Data</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Data_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Data_Findings}}</span></p>
+
+    <h3 class="c10"><span class="c7">Security</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Security_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Security_Findings}}</span></p>
+
+    <h3 class="c10"><span class="c7">Vendors</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Vendors_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Vendors_Findings}}</span></p>
+
+    <h3 class="c10"><span class="c7">Human Oversight</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{HumanOversight_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{HumanOversight_Findings}}</span></p>
+
+    <h3 class="c10"><span class="c7">Transparency</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Transparency_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Transparency_Findings}}</span></p>
+
+    <h2 class="c10"><span class="c6">30-Day Plan</span></h2>
+    <table class="c5">
+      <tr>
+        <td class="c3"><p class="c0"><span class="c2">Task</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Owner</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Effort (S/M/L)</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Impact</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Due Date</span></p></td>
+      </tr>
+      <!-- Empty rows for plan entries -->
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+    </table>
+
+    <h2 class="c10"><span class="c6">Appendix</span></h2>
+
+    <h3 class="c10"><span class="c7">EU AI Act 101</span></h3>
+    <p class="c0"><span class="c2">{{EU_AI_Act_101}}</span></p>
+
+    <h3 class="c10"><span class="c7">US Healthcare Automation Lens</span></h3>
+    <p class="c0"><span class="c2">{{US_Healthcare_Lens}}</span></p>
+  </body>
+</html>
