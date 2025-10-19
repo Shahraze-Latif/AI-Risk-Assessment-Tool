@@ -181,7 +181,7 @@ const categories: Category[] = [
 export default function ReadinessQuestionnairePage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed'>('loading');
+  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed' | 'pending'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [currentCategory, setCurrentCategory] = useState(0);
@@ -201,8 +201,16 @@ export default function ReadinessQuestionnairePage() {
         const response = await fetch(`/api/verify-payment?session_id=${sessionId}`);
         if (response.ok) {
           setPaymentStatus('verified');
+        } else if (response.status === 202) {
+          // Payment is still processing
+          setPaymentStatus('pending');
+          // Retry after 3 seconds
+          setTimeout(() => {
+            verifyPayment();
+          }, 3000);
         } else {
-          setError('Payment verification failed');
+          const errorData = await response.json();
+          setError(errorData.error || 'Payment verification failed');
           setPaymentStatus('failed');
         }
       } catch (err) {
@@ -278,6 +286,21 @@ export default function ReadinessQuestionnairePage() {
           <div className="text-center space-y-4">
             <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
             <p className="text-lg text-gray-700">Verifying your payment...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (paymentStatus === 'pending') {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
+            <h1 className="text-2xl font-bold text-gray-900">Payment Processing</h1>
+            <p className="text-lg text-gray-700">Your payment is being processed. Please wait a moment...</p>
+            <p className="text-sm text-gray-500">This page will automatically refresh when payment is confirmed.</p>
           </div>
         </div>
       </Layout>
