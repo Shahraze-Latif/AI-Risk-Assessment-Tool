@@ -74,15 +74,15 @@ export function calculateAreaScore(answers: Record<string, number>, category: st
     return { score: 0, label: 'Low' };
   }
 
-  // Calculate average and round to 1 decimal place
+  // Calculate average and round to nearest integer as per client spec
   const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-  const roundedScore = Math.round(averageScore * 10) / 10;
+  const roundedScore = Math.round(averageScore);
 
-  // Determine label based on score
+  // Determine label based on score (0-1 = Low, 2 = Medium, 3 = High)
   let label: 'Low' | 'Medium' | 'High';
   if (roundedScore <= 1) {
     label = 'Low';
-  } else if (roundedScore <= 2) {
+  } else if (roundedScore === 2) {
     label = 'Medium';
   } else {
     label = 'High';
@@ -136,7 +136,7 @@ export function generatePlan(areaScores: Record<string, AreaScore>, answers: Rec
   const plan: string[] = [];
 
   // Security ≥ 2 AND MFA = No → "Enable MFA and RBAC for all admin users"
-  if (areaScores.security.score >= 2) {
+  if (areaScores.security.score >= 2 && answers.access_controls >= 2) {
     plan.push("Enable MFA and RBAC for all admin users");
   }
 

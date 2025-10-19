@@ -33,20 +33,21 @@ const categories: Category[] = [
     questions: [
       {
         id: 'roles_ownership',
-        text: 'Do you have clearly defined roles and ownership for AI systems?',
+        text: 'Do you have named owners for AI risk (product, data, security, legal)?',
         options: [
-          { value: 0, label: 'Yes', description: 'Clear roles and ownership defined' },
-          { value: 2, label: 'Partial', description: 'Some roles defined, gaps exist' },
-          { value: 3, label: 'No', description: 'No clear roles or ownership' }
+          { value: 0, label: 'Yes', description: 'Named owners for AI risk defined' },
+          { value: 2, label: 'Partial', description: 'Some owners defined, gaps exist' },
+          { value: 3, label: 'No', description: 'No named owners for AI risk' }
         ]
       },
       {
         id: 'policies',
-        text: 'Do you have AI governance policies in place?',
+        text: 'Do you have any written AI or model governance policy?',
         options: [
-          { value: 0, label: 'Yes', description: 'Comprehensive policies implemented' },
-          { value: 2, label: 'Partial/Draft', description: 'Policies in draft or partially implemented' },
-          { value: 3, label: 'No', description: 'No AI governance policies' }
+          { value: 0, label: 'Yes', description: 'Written AI governance policy in place' },
+          { value: 2, label: 'Partial', description: 'Partial policy or draft version' },
+          { value: 2, label: 'Draft', description: 'Policy in draft form' },
+          { value: 3, label: 'No', description: 'No written AI governance policy' }
         ]
       }
     ]
@@ -58,20 +59,20 @@ const categories: Category[] = [
     questions: [
       {
         id: 'sensitive_data',
-        text: 'What type of sensitive data does your AI system process?',
+        text: 'Does the system use PII/PHI or similarly sensitive data?',
         options: [
-          { value: 0, label: 'No', description: 'No sensitive data processed' },
+          { value: 0, label: 'No', description: 'No sensitive data used' },
           { value: 1, label: 'PII only', description: 'Only personally identifiable information' },
-          { value: 3, label: 'PHI/Special', description: 'Protected health information or special categories' }
+          { value: 3, label: 'PHI or special categories', description: 'Protected health information or special categories' }
         ]
       },
       {
         id: 'data_geography',
-        text: 'Do you know where your data is stored and processed geographically?',
+        text: 'Are end users or data subjects in the EU/UK?',
         options: [
-          { value: 0, label: 'Yes', description: 'Clear understanding of data geography' },
-          { value: 2, label: 'Unsure', description: 'Uncertain about data geography' },
-          { value: 3, label: 'No', description: 'No knowledge of data geography' }
+          { value: 0, label: 'No', description: 'No EU/UK end users or data subjects' },
+          { value: 2, label: 'Unsure', description: 'Uncertain about EU/UK presence' },
+          { value: 3, label: 'Yes', description: 'End users or data subjects in EU/UK' }
         ]
       }
     ]
@@ -83,20 +84,20 @@ const categories: Category[] = [
     questions: [
       {
         id: 'access_controls',
-        text: 'Do you have access controls for AI systems?',
+        text: 'Are MFA and role-based access (RBAC) enabled for all admin paths?',
         options: [
-          { value: 0, label: 'Yes', description: 'Comprehensive access controls implemented' },
-          { value: 2, label: 'Partial', description: 'Some access controls in place' },
-          { value: 3, label: 'No', description: 'No access controls for AI systems' }
+          { value: 0, label: 'Yes', description: 'MFA and RBAC enabled for all admin paths' },
+          { value: 2, label: 'Partial', description: 'Some MFA and RBAC implemented' },
+          { value: 3, label: 'No', description: 'No MFA or RBAC for admin paths' }
         ]
       },
       {
         id: 'protection_logs',
-        text: 'Do you have data protection and audit logging?',
+        text: 'Is data encrypted at rest/in transit and are access/inference logs retained?',
         options: [
-          { value: 0, label: 'Yes', description: 'Full protection and logging implemented' },
-          { value: 2, label: 'Partial', description: 'Some protection and logging measures' },
-          { value: 3, label: 'No', description: 'No data protection or audit logging' }
+          { value: 0, label: 'Yes', description: 'Full encryption and logging implemented' },
+          { value: 2, label: 'Partial', description: 'Some encryption and logging measures' },
+          { value: 3, label: 'No', description: 'No encryption or logging' }
         ]
       }
     ]
@@ -108,20 +109,21 @@ const categories: Category[] = [
     questions: [
       {
         id: 'providers',
-        text: 'What AI providers do you use?',
+        text: 'Which AI providers are used?',
         options: [
-          { value: 1, label: 'Azure/single vetted', description: 'Using single vetted provider through Azure' },
-          { value: 2, label: 'OSS/self-hosted/multiple', description: 'Open source, self-hosted, or multiple providers' },
-          { value: 3, label: 'Unknown', description: 'Unclear or unknown providers' }
+          { value: 1, label: 'OpenAI via Azure', description: 'Using OpenAI through Azure' },
+          { value: 1, label: 'Other US', description: 'Other US-based providers' },
+          { value: 2, label: 'OSS', description: 'Open source solutions' },
+          { value: 2, label: 'Multiple', description: 'Multiple providers' }
         ]
       },
       {
         id: 'contracts',
-        text: 'Do you have data processing agreements with AI providers?',
+        text: 'Do you have DPAs and security terms with AI vendors?',
         options: [
-          { value: 0, label: 'Yes', description: 'Comprehensive DPAs in place' },
+          { value: 0, label: 'Yes', description: 'Comprehensive DPAs and security terms' },
           { value: 2, label: 'Partial', description: 'Some DPAs or incomplete agreements' },
-          { value: 3, label: 'No', description: 'No data processing agreements' }
+          { value: 3, label: 'No', description: 'No DPAs or security terms' }
         ]
       }
     ]
@@ -133,20 +135,21 @@ const categories: Category[] = [
     questions: [
       {
         id: 'human_in_loop',
-        text: 'What level of human oversight do you have?',
+        text: 'Where is human review applied?',
         options: [
-          { value: 0, label: 'Pre/Real-time', description: 'Human review before deployment and real-time monitoring' },
-          { value: 2, label: 'Post-hoc', description: 'Human review after AI decisions' },
-          { value: 3, label: 'None', description: 'No human oversight of AI systems' }
+          { value: 0, label: 'Pre-deployment', description: 'Human review before deployment' },
+          { value: 0, label: 'Real-time', description: 'Real-time human review' },
+          { value: 2, label: 'Post-hoc', description: 'Human review after decisions' },
+          { value: 3, label: 'None', description: 'No human review applied' }
         ]
       },
       {
         id: 'rollback_incidents',
-        text: 'Do you have rollback and incident response procedures?',
+        text: 'Is there a defined rollback + incident handling plan for AI features?',
         options: [
-          { value: 0, label: 'Yes', description: 'Comprehensive rollback and incident procedures' },
-          { value: 2, label: 'Partial', description: 'Some procedures in place' },
-          { value: 3, label: 'No', description: 'No rollback or incident procedures' }
+          { value: 0, label: 'Yes', description: 'Comprehensive rollback and incident plan' },
+          { value: 2, label: 'Partial', description: 'Some rollback and incident procedures' },
+          { value: 3, label: 'No', description: 'No rollback or incident plan' }
         ]
       }
     ]
@@ -158,20 +161,20 @@ const categories: Category[] = [
     questions: [
       {
         id: 'user_disclosure',
-        text: 'Do you disclose AI use to users?',
+        text: 'Are users informed when they interact with AI or when AI influences decisions?',
         options: [
-          { value: 0, label: 'Yes', description: 'Clear disclosure of AI use to users' },
+          { value: 0, label: 'Yes', description: 'Users clearly informed about AI interaction' },
           { value: 2, label: 'Partial', description: 'Some disclosure but incomplete' },
-          { value: 3, label: 'No', description: 'No disclosure of AI use to users' }
+          { value: 3, label: 'No', description: 'No disclosure of AI interaction' }
         ]
       },
       {
         id: 'record_keeping',
-        text: 'Do you maintain records of AI system decisions?',
+        text: 'Do you keep a model inventory + change log?',
         options: [
-          { value: 0, label: 'Yes', description: 'Comprehensive record keeping of AI decisions' },
-          { value: 2, label: 'Partial', description: 'Some record keeping in place' },
-          { value: 3, label: 'No', description: 'No record keeping of AI decisions' }
+          { value: 0, label: 'Yes', description: 'Comprehensive model inventory and change log' },
+          { value: 2, label: 'Partial', description: 'Some inventory and logging' },
+          { value: 3, label: 'No', description: 'No model inventory or change log' }
         ]
       }
     ]
