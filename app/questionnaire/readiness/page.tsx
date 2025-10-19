@@ -181,12 +181,13 @@ const categories: Category[] = [
 export default function ReadinessQuestionnairePage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed' | 'pending'>('loading');
+  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed' | 'pending' | 'webhook_processing'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [currentCategory, setCurrentCategory] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!sessionId) {
@@ -198,20 +199,30 @@ export default function ReadinessQuestionnairePage() {
     // Verify payment status
     const verifyPayment = async () => {
       try {
-        console.log('🔍 Verifying payment for session:', sessionId);
+        console.log('🔍 Verifying payment for session:', sessionId, `(attempt ${retryCount + 1})`);
         const response = await fetch(`/api/verify-payment?session_id=${sessionId}`);
         
         if (response.ok) {
           console.log('✅ Payment verified successfully');
           setPaymentStatus('verified');
         } else if (response.status === 202) {
-          // Payment is still processing
-          console.log('⏳ Payment still processing, retrying...');
-          setPaymentStatus('pending');
-          // Retry after 3 seconds
+          // Payment is still processing (webhook hasn't completed yet)
+          console.log('⏳ Payment still processing via webhook, retrying...');
+          setPaymentStatus('webhook_processing');
+          
+          // Check retry limit (max 15 attempts = 30 seconds)
+          if (retryCount >= 15) {
+            console.error('❌ Max retries reached, payment verification timeout');
+            setError('Payment verification is taking longer than expected. Please contact support if this continues.');
+            setPaymentStatus('failed');
+            return;
+          }
+          
+          setRetryCount(prev => prev + 1);
+          // Retry after 2 seconds for faster response
           setTimeout(() => {
             verifyPayment();
-          }, 3000);
+          }, 2000);
         } else {
           const errorData = await response.json();
           console.error('❌ Payment verification failed:', errorData);
@@ -294,11 +305,59 @@ export default function ReadinessQuestionnairePage() {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
-            <h1 className="text-2xl font-bold text-gray-900">Processing Payment</h1>
-            <p className="text-lg text-gray-700">Please wait while we verify your payment...</p>
-            <p className="text-sm text-gray-500">This may take a few moments</p>
+          <div className="text-center space-y-6">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
+              <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-gray-900">Welcome Back!</h1>
+              <p className="text-lg text-gray-700">Verifying your payment and preparing your assessment...</p>
+              <p className="text-sm text-gray-500">Setting up your personalized AI Compliance Readiness Check</p>
+            </div>
+            <div className="flex items-center justify-center space-x-2 text-blue-600">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (paymentStatus === 'webhook_processing') {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center space-y-6">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
+              <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-gray-900">Payment Completed!</h1>
+              <p className="text-lg text-gray-700">Processing your payment via secure webhook...</p>
+              <p className="text-sm text-gray-500">This usually takes just a few seconds</p>
+              {retryCount > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
+                    <span>Attempt {retryCount} of 15</span>
+                    <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                        style={{ width: `${(retryCount / 15) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-center space-x-2 text-blue-600">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
           </div>
         </div>
       </Layout>
