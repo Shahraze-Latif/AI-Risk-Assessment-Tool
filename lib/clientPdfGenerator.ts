@@ -112,9 +112,11 @@ export async function generateClientPDF(data: ReportData, filename?: string): Pr
     console.log(`📄 Creating ${totalPages} pages for content`);
     
     // Add content to multiple pages with proper margins
-    const margin = 40; // 1 inch margins
+    const margin = 40; // 1 inch margins on left and right
+    const topMargin = 50; // Top margin
+    const bottomMargin = 50; // Bottom margin
     const contentWidth = pdfWidth - (2 * margin);
-    const contentHeight = pdfHeight - (2 * margin);
+    const contentHeight = pdfHeight - topMargin - bottomMargin;
     
     for (let i = 0; i < totalPages; i++) {
       if (i > 0) {
@@ -122,7 +124,7 @@ export async function generateClientPDF(data: ReportData, filename?: string): Pr
       }
       
       const yOffset = -i * pdfHeight;
-      pdf.addImage(imgData, 'PNG', margin, margin + yOffset, contentWidth, scaledHeight);
+      pdf.addImage(imgData, 'PNG', margin, topMargin + yOffset, contentWidth, scaledHeight);
     }
     
     // 5. Download the PDF

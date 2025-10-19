@@ -2,59 +2,60 @@
 <html>
   <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
-    <style type="text/css">
-      @import url(https://themes.googleusercontent.com/fonts/css?kit=fpjTOVmNbO4Lz34iLyptLUXza5VhXqVC6o75Eld_V98);
+        <style type="text/css">
+          @import url(https://themes.googleusercontent.com/fonts/css?kit=fpjTOVmNbO4Lz34iLyptLUXza5VhXqVC6o75Eld_V98);
 
-      ol {
-        margin: 0;
-        padding: 0;
-      }
+          ol {
+            margin: 0;
+            padding: 0;
+          }
 
-      table td,
-      table th {
-        padding: 0;
-      }
+          table td,
+          table th {
+            padding: 0;
+          }
 
-      .c11 {
-        background-color: #ffffff;
-        max-width: 468pt;
-        padding: 72pt;
-      }
+          .c11 {
+            background-color: #ffffff;
+            max-width: 468pt;
+            padding: 72pt 72pt 100pt 72pt; /* Added bottom padding for appendix */
+            font-family: "Calibri", Arial, sans-serif;
+          }
 
-      .c14 {
-        color: #366091;
-        font-weight: 700;
-        font-size: 14pt;
-        font-family: "Calibri";
-      }
+          .c14 {
+            color: #366091;
+            font-weight: 700;
+            font-size: 14pt;
+            font-family: "Calibri", Arial, sans-serif;
+          }
 
-      .c6 {
-        color: #4f81bd;
-        font-weight: 700;
-        font-size: 13pt;
-        font-family: "Calibri";
-      }
+          .c6 {
+            color: #4f81bd;
+            font-weight: 700;
+            font-size: 14pt;
+            font-family: "Calibri", Arial, sans-serif;
+          }
 
-      .c7 {
-        color: #4f81bd;
-        font-weight: 700;
-        font-size: 11pt;
-        font-family: "Calibri";
-      }
+          .c7 {
+            color: #4f81bd;
+            font-weight: 700;
+            font-size: 14pt;
+            font-family: "Calibri", Arial, sans-serif;
+          }
 
-      .c2 {
-        color: #000000;
-        font-weight: 400;
-        font-size: 11pt;
-        font-family: "Calibri";
-      }
+          .c2 {
+            color: #000000;
+            font-weight: 400;
+            font-size: 11pt;
+            font-family: "Calibri", Arial, sans-serif;
+          }
 
-      .c13 {
-        color: #000000;
-        font-weight: 400;
-        font-size: 11pt;
-        font-family: "Arial";
-      }
+          .c13 {
+            color: #000000;
+            font-weight: 400;
+            font-size: 11pt;
+            font-family: "Calibri", Arial, sans-serif;
+          }
 
       .c0,
       .c8 {
@@ -104,45 +105,66 @@
         height: 0pt;
       }
 
-      h1 {
-        padding-top: 20pt;
-        color: #000000;
-        font-size: 20pt;
-        padding-bottom: 6pt;
-        font-family: "Arial";
-        line-height: 1.15;
-        text-align: left;
-      }
+          h1 {
+            padding-top: 20pt;
+            color: #000000;
+            font-size: 14pt;
+            font-weight: 700;
+            padding-bottom: 6pt;
+            font-family: "Calibri", Arial, sans-serif;
+            line-height: 1.15;
+            text-align: left;
+          }
 
-      h2 {
-        padding-top: 18pt;
-        color: #000000;
-        font-size: 16pt;
-        padding-bottom: 6pt;
-        font-family: "Arial";
-        line-height: 1.15;
-        text-align: left;
-      }
+          h2 {
+            padding-top: 18pt;
+            color: #000000;
+            font-size: 14pt;
+            font-weight: 700;
+            padding-bottom: 6pt;
+            font-family: "Calibri", Arial, sans-serif;
+            line-height: 1.15;
+            text-align: left;
+          }
 
-      h3 {
-        padding-top: 16pt;
-        color: #434343;
-        font-size: 14pt;
-        padding-bottom: 4pt;
-        font-family: "Arial";
-        line-height: 1.15;
-        text-align: left;
-      }
+          h3 {
+            padding-top: 16pt;
+            color: #434343;
+            font-size: 14pt;
+            font-weight: 700;
+            padding-bottom: 4pt;
+            font-family: "Calibri", Arial, sans-serif;
+            line-height: 1.15;
+            text-align: left;
+          }
 
-      h4 {
-        padding-top: 14pt;
-        color: #666666;
-        font-size: 12pt;
-        padding-bottom: 4pt;
-        font-family: "Arial";
-        line-height: 1.15;
-        text-align: left;
-      }
+          h4 {
+            padding-top: 14pt;
+            color: #666666;
+            font-size: 11pt;
+            font-weight: 400;
+            padding-bottom: 4pt;
+            font-family: "Calibri", Arial, sans-serif;
+            line-height: 1.15;
+            text-align: left;
+          }
+
+          /* Appendix positioning */
+          .appendix-section {
+            margin-top: 40pt;
+            page-break-before: auto;
+          }
+
+          /* Ensure proper spacing for all content */
+          .c0, .c8 {
+            padding-top: 0pt;
+            padding-bottom: 10pt;
+            line-height: 1.15;
+            text-align: left;
+            font-family: "Calibri", Arial, sans-serif;
+            font-size: 11pt;
+            font-weight: 400;
+          }
     </style>
   </head>
 
@@ -214,12 +236,14 @@
       {{ActionPlanRows}}
     </table>
 
-    <h2 class="c10"><span class="c6">Appendix</span></h2>
+    <div class="appendix-section">
+      <h2 class="c10"><span class="c6">Appendix</span></h2>
 
-    <h3 class="c10"><span class="c7">EU AI Act 101</span></h3>
-    <p class="c0"><span class="c2">{{EU_AI_Act_101}}</span></p>
+      <h3 class="c10"><span class="c7">EU AI Act 101</span></h3>
+      <p class="c0"><span class="c2">{{EU_AI_Act_101}}</span></p>
 
-    <h3 class="c10"><span class="c7">US Healthcare Automation Lens</span></h3>
-    <p class="c0"><span class="c2">{{US_Healthcare_Lens}}</span></p>
+      <h3 class="c10"><span class="c7">US Healthcare Automation Lens</span></h3>
+      <p class="c0"><span class="c2">{{US_Healthcare_Lens}}</span></p>
+    </div>
   </body>
 </html>
