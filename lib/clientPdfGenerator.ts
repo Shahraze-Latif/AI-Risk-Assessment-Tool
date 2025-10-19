@@ -156,31 +156,35 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
   
   console.log('📊 Processing assessment data:', assessmentData);
   
-  // Extract area scores - handle both direct and nested structures
-  const areaScores = assessmentData.area_scores || assessmentData.areaScores || {};
+  // Extract area scores from the actual data structure
+  const areaScores = assessmentData.area_scores || {};
+  const heatmap = assessmentData.heatmap || {};
+  const answers = assessmentData.answers || {};
   console.log('📊 Area scores:', areaScores);
+  console.log('📊 Heatmap:', heatmap);
+  console.log('📊 Answers:', answers);
   
-  // Generate top risks (areas with lowest scores)
-  const sortedAreas = Object.entries(areaScores)
-    .sort(([,a], [,b]) => (a as number) - (b as number))
+  // Generate top risks (areas with highest scores in heatmap - these are the problem areas)
+  const sortedAreas = Object.entries(heatmap)
+    .sort(([,a], [,b]) => (b as number) - (a as number))
     .slice(0, 3)
     .map(([area]) => area);
   
-  // Generate quick wins (areas with highest scores)
-  const quickWins = Object.entries(areaScores)
-    .sort(([,a], [,b]) => (b as number) - (a as number))
+  // Generate quick wins (areas with lowest scores - these are strengths)
+  const quickWins = Object.entries(heatmap)
+    .sort(([,a], [,b]) => (a as number) - (b as number))
     .slice(0, 2)
     .map(([area]) => area);
   
-  console.log('📊 Top risks:', sortedAreas);
-  console.log('📊 Quick wins:', quickWins);
+  console.log('📊 Top risks (highest scores):', sortedAreas);
+  console.log('📊 Quick wins (lowest scores):', quickWins);
   
-  // Generate findings for each area
+  // Generate findings for each area based on 0-3 scoring system
   const generateFindings = (area: string, score: number) => {
-    if (score >= 80) return `Strong ${area} practices with comprehensive policies and procedures.`;
-    if (score >= 60) return `Good ${area} foundation with some areas for improvement.`;
-    if (score >= 40) return `Moderate ${area} practices with significant gaps to address.`;
-    return `Weak ${area} practices requiring immediate attention and improvement.`;
+    if (score <= 1) return `Strong ${area} practices with comprehensive policies and procedures.`;
+    if (score === 2) return `Moderate ${area} practices with some gaps to address.`;
+    if (score === 3) return `Significant ${area} gaps requiring immediate attention and improvement.`;
+    return `Critical ${area} issues requiring urgent remediation.`;
   };
   
   const generateWhy = (area: string) => {
@@ -204,31 +208,97 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     due: string;
   }
   
-  // Generate 30-day action plan
+  // Generate 30-day action plan based on assessment gaps
   const generateActionPlan = (): ActionPlanItem[] => {
-    const plan = assessmentData.plan || [];
-    if (plan.length > 0) {
-      return plan.map((item: any, index: number) => {
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + (index + 1) * 7); // Spread over 4 weeks
-        
-        return {
-          task: item.task || `Action ${index + 1}`,
-          owner: item.owner || 'Compliance Team',
-          effort: item.effort || 'Medium',
-          impact: item.impact || 'High',
-          due: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        };
+    const actionPlan: ActionPlanItem[] = [];
+    
+    // Check Security gaps (≥ 2) and MFA status
+    if (heatmap.security >= 2) {
+      actionPlan.push({
+        task: 'Enable MFA and RBAC for all admin users',
+        owner: 'IT',
+        effort: 'Small',
+        impact: 'High',
+        due: 'Week 1'
       });
     }
     
-    // Default action plan if none provided
-    return [
-      { task: 'Review AI governance policies', owner: 'Legal Team', effort: 'Small', impact: 'High', due: 'Week 1' },
-      { task: 'Implement data quality controls', owner: 'Data Team', effort: 'Medium', impact: 'High', due: 'Week 2' },
-      { task: 'Enhance security monitoring', owner: 'Security Team', effort: 'Large', impact: 'Critical', due: 'Week 3' },
-      { task: 'Establish vendor oversight', owner: 'Procurement', effort: 'Medium', impact: 'Medium', due: 'Week 4' }
-    ];
+    // Check Vendors gaps (≥ 2) or no DPA
+    if (heatmap.vendors >= 2) {
+      actionPlan.push({
+        task: 'Execute DPA with AI provider; review SOC2/ISO docs',
+        owner: 'Ops/Legal',
+        effort: 'Medium',
+        impact: 'High',
+        due: 'Week 2'
+      });
+    }
+    
+    // Check Human Oversight gaps (≥ 2)
+    if (heatmap.human_oversight >= 2) {
+      actionPlan.push({
+        task: 'Add real-time human review for escalations; define fallback',
+        owner: 'Product',
+        effort: 'Medium',
+        impact: 'High',
+        due: 'Week 2'
+      });
+    }
+    
+    // Check Data gaps (≥ 2) - assuming PHI handling needs improvement
+    if (heatmap.data >= 2) {
+      actionPlan.push({
+        task: 'Limit PHI in prompts; add redaction',
+        owner: 'Data',
+        effort: 'Medium',
+        impact: 'High',
+        due: 'Week 3'
+      });
+    }
+    
+    // Check Transparency gaps (≥ 2)
+    if (heatmap.transparency >= 2) {
+      actionPlan.push({
+        task: 'Add AI disclosure text in UI and Help Center',
+        owner: 'Product',
+        effort: 'Small',
+        impact: 'Medium',
+        due: 'Week 3'
+      });
+    }
+    
+    // Check Governance gaps (≥ 2)
+    if (heatmap.governance >= 2) {
+      actionPlan.push({
+        task: 'Publish 1-page AI policy; assign RACI for approvals',
+        owner: 'Leadership',
+        effort: 'Small',
+        impact: 'Medium',
+        due: 'Week 4'
+      });
+    }
+    
+    // If no specific gaps found, add general improvement actions
+    if (actionPlan.length === 0) {
+      actionPlan.push(
+        {
+          task: 'Review and update AI governance policies',
+          owner: 'Legal',
+          effort: 'Small',
+          impact: 'Medium',
+          due: 'Week 1'
+        },
+        {
+          task: 'Conduct security assessment of AI systems',
+          owner: 'Security',
+          effort: 'Medium',
+          impact: 'High',
+          due: 'Week 2'
+        }
+      );
+    }
+    
+    return actionPlan;
   };
   
   const actionPlan = generateActionPlan();
@@ -243,27 +313,27 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     TopRisks: sortedAreas.length > 0 ? sortedAreas.join(', ') : 'Governance, Data, Security',
     QuickWins: quickWins.length > 0 ? quickWins.join(', ') : 'Transparency, Human Oversight',
     
-    // Risk Heatmap - handle different naming conventions
-    Governance_Level: getRiskLevel(areaScores.governance || areaScores.Governance || 0),
-    Data_Level: getRiskLevel(areaScores.data || areaScores.Data || 0),
-    Security_Level: getRiskLevel(areaScores.security || areaScores.Security || 0),
-    Vendors_Level: getRiskLevel(areaScores.vendors || areaScores.Vendors || 0),
-    HumanOversight_Level: getRiskLevel(areaScores.human_oversight || areaScores.HumanOversight || 0),
-    Transparency_Level: getRiskLevel(areaScores.transparency || areaScores.Transparency || 0),
+    // Risk Heatmap - use heatmap scores directly
+    Governance_Level: getRiskLevel(heatmap.governance || 0),
+    Data_Level: getRiskLevel(heatmap.data || 0),
+    Security_Level: getRiskLevel(heatmap.security || 0),
+    Vendors_Level: getRiskLevel(heatmap.vendors || 0),
+    HumanOversight_Level: getRiskLevel(heatmap.human_oversight || 0),
+    Transparency_Level: getRiskLevel(heatmap.transparency || 0),
     
-    // Findings by Area
+    // Findings by Area - use heatmap scores
     Governance_Why: generateWhy('Governance'),
-    Governance_Findings: generateFindings('Governance', areaScores.governance || areaScores.Governance || 0),
+    Governance_Findings: generateFindings('Governance', heatmap.governance || 0),
     Data_Why: generateWhy('Data'),
-    Data_Findings: generateFindings('Data', areaScores.data || areaScores.Data || 0),
+    Data_Findings: generateFindings('Data', heatmap.data || 0),
     Security_Why: generateWhy('Security'),
-    Security_Findings: generateFindings('Security', areaScores.security || areaScores.Security || 0),
+    Security_Findings: generateFindings('Security', heatmap.security || 0),
     Vendors_Why: generateWhy('Vendors'),
-    Vendors_Findings: generateFindings('Vendors', areaScores.vendors || areaScores.Vendors || 0),
+    Vendors_Findings: generateFindings('Vendors', heatmap.vendors || 0),
     HumanOversight_Why: generateWhy('HumanOversight'),
-    HumanOversight_Findings: generateFindings('Human Oversight', areaScores.human_oversight || areaScores.HumanOversight || 0),
+    HumanOversight_Findings: generateFindings('Human Oversight', heatmap.human_oversight || 0),
     Transparency_Why: generateWhy('Transparency'),
-    Transparency_Findings: generateFindings('Transparency', areaScores.transparency || areaScores.Transparency || 0),
+    Transparency_Findings: generateFindings('Transparency', heatmap.transparency || 0),
     
     // 30-Day Action Plan
     ActionPlanRows: actionPlan.map((item: ActionPlanItem) => 
@@ -283,13 +353,13 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
 }
 
 /**
- * Convert numeric score to risk level
- * @param score - Numeric score (0-100)
+ * Convert numeric score to risk level based on the actual scoring system
+ * @param score - Numeric score (0-3)
  * @returns Risk level string
  */
 function getRiskLevel(score: number): string {
-  if (score >= 80) return 'Low Risk';
-  if (score >= 60) return 'Medium Risk';
-  if (score >= 40) return 'High Risk';
+  if (score <= 1) return 'Low Risk';
+  if (score === 2) return 'Medium Risk';
+  if (score === 3) return 'High Risk';
   return 'Critical Risk';
 }
