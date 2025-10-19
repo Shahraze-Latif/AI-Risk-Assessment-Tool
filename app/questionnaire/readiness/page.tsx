@@ -12,6 +12,40 @@ import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileTe
 import { animations } from '@/lib/animations';
 import { generateClientPDF, formatReportData } from '@/lib/clientPdfGenerator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
+import dynamic from 'next/dynamic';
+
+// Lazy load questionnaire components
+const DynamicQuestionCard = dynamic(() => import('@/components/questionnaire/QuestionCard').then(mod => ({ default: mod.QuestionCard })), {
+  loading: () => (
+    <Card className="w-full">
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 animate-pulse">
+              <div className="w-4 h-4 bg-gray-300 rounded"></div>
+            </div>
+            <div className="flex-1">
+              <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+              <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4"></div>
+            </div>
+          </div>
+          <div className="flex space-x-3 pl-11">
+            <Button disabled className="flex-1">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Yes
+            </Button>
+            <Button disabled className="flex-1">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              No
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  ),
+  ssr: false
+});
 
 interface Question {
   id: string;
@@ -185,6 +219,7 @@ const categories: Category[] = [
 export default function ReadinessQuestionnairePage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const { toast } = useToast();
   const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed' | 'pending' | 'webhook_processing'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -209,6 +244,12 @@ export default function ReadinessQuestionnairePage() {
         if (response.ok) {
           console.log('✅ Payment verified successfully');
           setPaymentStatus('verified');
+          // Show success toast immediately
+          toast({
+            title: "Payment Successful! 🎉",
+            description: "Your payment has been verified. You can now proceed with the assessment.",
+            duration: 3000,
+          });
         } else if (response.status === 202) {
           // Payment is still processing (webhook hasn't completed yet)
           console.log('⏳ Payment still processing via webhook, retrying...');
@@ -305,6 +346,7 @@ export default function ReadinessQuestionnairePage() {
     return Object.keys(answers).length === totalQuestions;
   };
 
+  // Only show loading for initial verification, not for successful payment
   if (paymentStatus === 'loading') {
     return (
       <Layout>
@@ -330,6 +372,7 @@ export default function ReadinessQuestionnairePage() {
     );
   }
 
+  // Keep webhook processing and pending states for other use cases
   if (paymentStatus === 'webhook_processing') {
     return (
       <Layout>
