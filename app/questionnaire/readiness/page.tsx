@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText, ChevronRight } from 'lucide-react';
 import { animations } from '@/lib/animations';
 import { generateClientPDF, formatReportData } from '@/lib/clientPdfGenerator';
 
@@ -465,6 +465,22 @@ export default function ReadinessQuestionnairePage() {
 
   return (
     <Layout>
+      <style jsx global>{`
+        input[type="radio"]:checked {
+          background-color: #2563eb !important;
+          border-color: #2563eb !important;
+        }
+        input[type="radio"]:checked::before {
+          background-color: white !important;
+        }
+        input[type="radio"]:checked::after {
+          background-color: white !important;
+        }
+        .radio-blue:checked {
+          background-color: #2563eb !important;
+          border-color: #2563eb !important;
+        }
+      `}</style>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
           <div className="max-w-4xl mx-auto">
@@ -537,7 +553,7 @@ export default function ReadinessQuestionnairePage() {
                           <RadioGroupItem 
                             value={option.value.toString()} 
                             id={`${question.id}-${option.value}`}
-                            className="absolute left-3 top-3"
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 radio-blue"
                           />
                           <Label 
                             htmlFor={`${question.id}-${option.value}`} 
@@ -577,8 +593,10 @@ export default function ReadinessQuestionnairePage() {
                   <Button
                     onClick={() => setCurrentCategory(currentCategory + 1)}
                     disabled={currentCategory === categories.length - 1}
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
                   >
-                    Next
+                    <span>Next</span>
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
                   <Button
