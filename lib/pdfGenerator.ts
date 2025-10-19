@@ -106,9 +106,9 @@ export async function generateLocalPDF(data: ReportData): Promise<Blob> {
     console.log(`📄 Creating ${totalPages} pages for content`);
     
     // Add content to multiple pages with proper margins
-    const margin = 40; // 1 inch margins on left and right
-    const topMargin = 50; // Top margin
-    const bottomMargin = 50; // Bottom margin
+    const margin = 40; // 1 inch margins on left and right (unchanged)
+    const topMargin = 80; // Increased top margin
+    const bottomMargin = 80; // Increased bottom margin
     const contentWidth = pdfWidth - (2 * margin);
     const contentHeight = pdfHeight - topMargin - bottomMargin;
     
