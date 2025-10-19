@@ -328,33 +328,109 @@ export default function ReadinessQuestionnairePage() {
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <div className="text-center space-y-6 mb-8">
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
                   Assessment Complete!
                 </h1>
                 <p className="text-lg text-gray-700">
-                  Thank you for completing your AI Compliance Readiness Check. Your results will be processed and delivered within 7 days.
+                  Your AI Compliance Readiness Check has been successfully completed and your personalized report has been generated.
                 </p>
               </div>
 
-              <Card className={`border-2 border-green-200 shadow-lg ${animations.card.hover}`}>
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-4">
-                    <p className="text-gray-700">
-                      You will receive your personalized risk heatmap, 30-day action plan, and client-ready PDF report via email.
-                    </p>
-                    <Button
-                      size="lg"
-                      className={`text-lg px-8 py-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg ${animations.button.primary}`}
-                      onClick={() => window.location.href = '/'}
-                    >
-                      Return to Home
-                    </Button>
+              {/* What Happens Next Section */}
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <Card className={`border-2 border-blue-200 shadow-lg ${animations.card.hover}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      <span>Your Report is Ready</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">PDF report has been automatically downloaded to your device</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Comprehensive risk assessment with detailed findings</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">30-day action plan with prioritized tasks</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`border-2 border-green-200 shadow-lg ${animations.card.hover}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Shield className="h-5 w-5 text-green-600" />
+                      <span>Next Steps</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Review your risk heatmap and identify priority areas</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Implement the 30-day action plan recommendations</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Address high-risk areas immediately for compliance</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Report Contents */}
+              <Card className={`border-2 border-indigo-200 shadow-lg mb-8 ${animations.card.hover}`}>
+                <CardHeader>
+                  <CardTitle className="text-center">Your Report Includes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="text-center space-y-2">
+                      <Database className="h-8 w-8 text-blue-600 mx-auto" />
+                      <h4 className="font-semibold text-gray-900">Risk Heatmap</h4>
+                      <p className="text-sm text-gray-600">Visual assessment of 6 key compliance areas</p>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <Users className="h-8 w-8 text-green-600 mx-auto" />
+                      <h4 className="font-semibold text-gray-900">Detailed Findings</h4>
+                      <p className="text-sm text-gray-600">Comprehensive analysis with specific recommendations</p>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <Eye className="h-8 w-8 text-purple-600 mx-auto" />
+                      <h4 className="font-semibold text-gray-900">30-Day Plan</h4>
+                      <p className="text-sm text-gray-600">Prioritized action items with clear timelines</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Action Buttons */}
+              <div className="text-center space-y-4">
+                <Button
+                  size="lg"
+                  className={`text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg ${animations.button.primary}`}
+                  onClick={() => window.location.href = '/'}
+                >
+                  Return to Home
+                </Button>
+                <p className="text-sm text-gray-500">
+                  Need help with your assessment? Contact our compliance experts for guidance.
+                </p>
+              </div>
             </div>
           </div>
         </div>

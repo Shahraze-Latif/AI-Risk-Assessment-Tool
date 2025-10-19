@@ -1,699 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Compliance Readiness Check Report</title>
-    <style>
-        /* Import Google Fonts for professional typography */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        
-        /* Reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1a1a1a;
-            background: #ffffff;
-            font-size: 14px;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px;
-        }
-        
-        /* Header Section */
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-            padding-bottom: 30px;
-            border-bottom: 3px solid #2563eb;
-            position: relative;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(90deg, #2563eb, #3b82f6);
-            border-radius: 2px;
-        }
-        
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-        }
-        
-        .header .subtitle {
-            font-size: 16px;
-            color: #64748b;
-            font-weight: 500;
-            margin-bottom: 20px;
-        }
-        
-        .client-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #2563eb;
-            margin-top: 20px;
-        }
-        
-        .client-info .info-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .client-info .label {
-            font-size: 12px;
-            color: #64748b;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        
-        .client-info .value {
-            font-size: 16px;
-            color: #1e40af;
-            font-weight: 600;
-        }
-        
-        .confidential {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            text-align: center;
-            margin-top: 15px;
-            border: 1px solid #fbbf24;
-        }
-        
-        /* Section Headers */
-        .section {
-            margin-bottom: 40px;
-        }
-        
-        .section-header {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-            position: relative;
-        }
-        
-        .section-header::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 50px;
-            height: 2px;
-            background: #2563eb;
-        }
-        
-        /* Executive Summary */
-        .executive-summary {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 30px;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 20px;
-        }
-        
-        .summary-item {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #2563eb;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .summary-item h4 {
-            font-size: 14px;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        
-        .summary-item p {
-            font-size: 16px;
-            color: #1a1a1a;
-            font-weight: 500;
-            line-height: 1.5;
-        }
-        
-        /* Risk Heatmap Table */
-        .heatmap-container {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .heatmap-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .heatmap-table thead {
-            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-            color: white;
-        }
-        
-        .heatmap-table th {
-            padding: 16px 20px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .heatmap-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-        
-        .heatmap-table tbody tr:hover {
-            background: #f8fafc;
-        }
-        
-        .risk-level {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .risk-low {
-            background: #dcfce7;
-            color: #166534;
-        }
-        
-        .risk-medium {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .risk-high {
-            background: #fecaca;
-            color: #991b1b;
-        }
-        
-        .risk-critical {
-            background: #fecaca;
-            color: #991b1b;
-            font-weight: 700;
-        }
-        
-        .legend {
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-top: 1px solid #e2e8f0;
-            font-size: 12px;
-            color: #64748b;
-        }
-        
-        /* Findings Section */
-        .findings-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-        }
-        
-        .finding-card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
-        }
-        
-        .finding-card:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .finding-header {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .finding-content {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        
-        .finding-item {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #2563eb;
-        }
-        
-        .finding-item h5 {
-            font-size: 14px;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        
-        .finding-item p {
-            font-size: 15px;
-            color: #1a1a1a;
-            line-height: 1.6;
-        }
-        
-        /* 30-Day Plan */
-        .plan-container {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .plan-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .plan-table thead {
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            color: white;
-        }
-        
-        .plan-table th {
-            padding: 16px 12px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .plan-table td {
-            padding: 16px 12px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: top;
-        }
-        
-        .plan-table tbody tr:hover {
-            background: #f0fdf4;
-        }
-        
-        /* Appendix */
-        .appendix-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-        }
-        
-        .appendix-card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .appendix-header {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .appendix-content {
-            font-size: 15px;
-            color: #374151;
-            line-height: 1.7;
-        }
-        
-        /* Footer */
-        .footer {
-            margin-top: 60px;
-            padding-top: 30px;
-            border-top: 2px solid #e2e8f0;
-            text-align: center;
-            color: #64748b;
-            font-size: 12px;
-        }
-        
-        .footer p {
-            margin-bottom: 5px;
-        }
-        
-        /* Responsive adjustments for PDF */
-        @media print {
-            body {
-                padding: 20px;
-                font-size: 12px;
-            }
-            
-            .section {
-                margin-bottom: 30px;
-            }
-            
-            .summary-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-        }
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <style type="text/css">
+      @import url(https://themes.googleusercontent.com/fonts/css?kit=fpjTOVmNbO4Lz34iLyptLUXza5VhXqVC6o75Eld_V98);
+
+      ol {
+        margin: 0;
+        padding: 0;
+      }
+
+      table td,
+      table th {
+        padding: 0;
+      }
+
+      .c11 {
+        background-color: #ffffff;
+        max-width: 468pt;
+        padding: 72pt;
+      }
+
+      .c14 {
+        color: #366091;
+        font-weight: 700;
+        font-size: 14pt;
+        font-family: "Calibri";
+      }
+
+      .c6 {
+        color: #4f81bd;
+        font-weight: 700;
+        font-size: 13pt;
+        font-family: "Calibri";
+      }
+
+      .c7 {
+        color: #4f81bd;
+        font-weight: 700;
+        font-size: 11pt;
+        font-family: "Calibri";
+      }
+
+      .c2 {
+        color: #000000;
+        font-weight: 400;
+        font-size: 11pt;
+        font-family: "Calibri";
+      }
+
+      .c13 {
+        color: #000000;
+        font-weight: 400;
+        font-size: 11pt;
+        font-family: "Arial";
+      }
+
+      .c0,
+      .c8 {
+        padding-top: 0pt;
+        padding-bottom: 10pt;
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      .c10,
+      .c12 {
+        padding-top: 10pt;
+        padding-bottom: 0pt;
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      .c5 {
+        border-spacing: 0;
+        border-collapse: collapse;
+        margin-left: -5.8pt;
+        margin-right: auto;
+      }
+
+      .c4,
+      .c3 {
+        border-style: solid;
+        border-width: 0pt;
+        padding: 0pt 5.8pt;
+        border-color: #000000;
+        vertical-align: top;
+      }
+
+      .c4 {
+        width: 144pt;
+      }
+
+      .c3 {
+        width: 86.4pt;
+      }
+
+      .c1 {
+        height: 11pt;
+      }
+
+      .c9 {
+        height: 0pt;
+      }
+
+      h1 {
+        padding-top: 20pt;
+        color: #000000;
+        font-size: 20pt;
+        padding-bottom: 6pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      h2 {
+        padding-top: 18pt;
+        color: #000000;
+        font-size: 16pt;
+        padding-bottom: 6pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      h3 {
+        padding-top: 16pt;
+        color: #434343;
+        font-size: 14pt;
+        padding-bottom: 4pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
+
+      h4 {
+        padding-top: 14pt;
+        color: #666666;
+        font-size: 12pt;
+        padding-bottom: 4pt;
+        font-family: "Arial";
+        line-height: 1.15;
+        text-align: left;
+      }
     </style>
-</head>
-<body>
-    <!-- Header Section -->
-    <div class="header">
-        <h1>AI Compliance Readiness Check</h1>
-        <div class="subtitle">Comprehensive Risk Assessment Report</div>
-        
-        <div class="client-info">
-            <div class="info-item">
-                <div class="label">Client</div>
-                <div class="value">{{ClientName}}</div>
-            </div>
-            <div class="info-item">
-                <div class="label">Report Date</div>
-                <div class="value">{{ReportDate}}</div>
-            </div>
-        </div>
-        
-        <div class="confidential">
-            🔒 Confidential — For internal use only
-        </div>
-    </div>
+  </head>
 
-    <!-- Executive Summary Section -->
-    <div class="section">
-        <h2 class="section-header">Executive Summary</h2>
-        <div class="executive-summary">
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <h4>🚨 Top Risk Areas</h4>
-                    <p>{{TopRisks}}</p>
-                </div>
-                <div class="summary-item">
-                    <h4>⚡ Quick Wins</h4>
-                    <p>{{QuickWins}}</p>
-                </div>
-            </div>
-        </div>
-    </div>
+  <body class="c11 doc-content">
+    <h1 class="c12">
+      <span class="c14">AI Compliance Readiness Check</span>
+    </h1>
 
-    <!-- Risk Heatmap Section -->
-    <div class="section">
-        <h2 class="section-header">Risk Heatmap</h2>
-        <div class="heatmap-container">
-            <table class="heatmap-table">
-                <thead>
-                    <tr>
-                        <th>Control Area</th>
-                        <th>Risk Level</th>
-                        <th>Assessment Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Governance</strong></td>
-                        <td><span class="risk-level" data-level="{{Governance_Level}}">{{Governance_Level}}</span></td>
-                        <td>Policy framework and oversight mechanisms</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Data Management</strong></td>
-                        <td><span class="risk-level" data-level="{{Data_Level}}">{{Data_Level}}</span></td>
-                        <td>Data quality, privacy, and lifecycle management</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Security</strong></td>
-                        <td><span class="risk-level" data-level="{{Security_Level}}">{{Security_Level}}</span></td>
-                        <td>Cybersecurity controls and threat protection</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Vendor Management</strong></td>
-                        <td><span class="risk-level" data-level="{{Vendors_Level}}">{{Vendors_Level}}</span></td>
-                        <td>Third-party AI vendor oversight and compliance</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Human Oversight</strong></td>
-                        <td><span class="risk-level" data-level="{{HumanOversight_Level}}">{{HumanOversight_Level}}</span></td>
-                        <td>Human-in-the-loop controls and monitoring</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Transparency</strong></td>
-                        <td><span class="risk-level" data-level="{{Transparency_Level}}">{{Transparency_Level}}</span></td>
-                        <td>AI decision explainability and auditability</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="legend">
-                <strong>Legend:</strong> Low Risk = Strong controls, Medium Risk = Some gaps, High Risk = Significant concerns, Critical Risk = Immediate action required
-            </div>
-        </div>
-    </div>
+    <p class="c0"><span class="c2">Client: {{ClientName}}</span></p>
+    <p class="c0"><span class="c2">Date: {{ReportDate}}</span></p>
+    <p class="c0"><span class="c2">Confidential — For internal use only.</span></p>
 
-    <!-- Findings by Area Section -->
-    <div class="section">
-        <h2 class="section-header">Detailed Findings by Area</h2>
-        <div class="findings-grid">
-            <!-- Governance -->
-            <div class="finding-card">
-                <h3 class="finding-header">🏛️ Governance</h3>
-                <div class="finding-content">
-                    <div class="finding-item">
-                        <h5>Why This Matters</h5>
-                        <p>{{Governance_Why}}</p>
-                    </div>
-                    <div class="finding-item">
-                        <h5>Assessment Findings</h5>
-                        <p>{{Governance_Findings}}</p>
-                    </div>
-                </div>
-            </div>
+    <h2 class="c10"><span class="c6">Executive Summary</span></h2>
+    <p class="c0"><span class="c2">Top Risks: {{TopRisks}}</span></p>
+    <p class="c0"><span class="c2">Quick Wins: {{QuickWins}}</span></p>
 
-            <!-- Data Management -->
-            <div class="finding-card">
-                <h3 class="finding-header">📊 Data Management</h3>
-                <div class="finding-content">
-                    <div class="finding-item">
-                        <h5>Why This Matters</h5>
-                        <p>{{Data_Why}}</p>
-                    </div>
-                    <div class="finding-item">
-                        <h5>Assessment Findings</h5>
-                        <p>{{Data_Findings}}</p>
-                    </div>
-                </div>
-            </div>
+    <h2 class="c10"><span class="c6">Risk Heatmap</span></h2>
+    <table class="c5">
+      <tr class="c9">
+        <td class="c4"><p class="c0"><span class="c2">Control Area</span></p></td>
+        <td class="c4"><p class="c0"><span class="c2">Level (L/M/H)</span></p></td>
+        <td class="c4"><p class="c0"><span class="c2">Notes</span></p></td>
+      </tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Governance</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Governance_Level}}</span></p></td><td class="c4"><p class="c0"><span class="c2">Policy framework and oversight mechanisms</span></p></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Data</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Data_Level}}</span></p></td><td class="c4"><p class="c0"><span class="c2">Data quality, privacy, and lifecycle management</span></p></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Security</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Security_Level}}</span></p></td><td class="c4"><p class="c0"><span class="c2">Cybersecurity controls and threat protection</span></p></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Vendors</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Vendors_Level}}</span></p></td><td class="c4"><p class="c0"><span class="c2">Third-party AI vendor oversight and compliance</span></p></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Human Oversight</span></p></td><td class="c4"><p class="c0"><span class="c2">{{HumanOversight_Level}}</span></p></td><td class="c4"><p class="c0"><span class="c2">Human-in-the-loop controls and monitoring</span></p></td></tr>
+      <tr><td class="c4"><p class="c0"><span class="c2">Transparency</span></p></td><td class="c4"><p class="c0"><span class="c2">{{Transparency_Level}}</span></p></td><td class="c4"><p class="c0"><span class="c2">AI decision explainability and auditability</span></p></td></tr>
+    </table>
 
-            <!-- Security -->
-            <div class="finding-card">
-                <h3 class="finding-header">🔒 Security</h3>
-                <div class="finding-content">
-                    <div class="finding-item">
-                        <h5>Why This Matters</h5>
-                        <p>{{Security_Why}}</p>
-                    </div>
-                    <div class="finding-item">
-                        <h5>Assessment Findings</h5>
-                        <p>{{Security_Findings}}</p>
-                    </div>
-                </div>
-            </div>
+    <p class="c0"><span class="c2"><strong>Legend:</strong> Low Risk = Strong controls (0-1), Medium Risk = Some gaps (2), High Risk = Significant concerns (3), Critical Risk = Immediate action required</span></p>
 
-            <!-- Vendor Management -->
-            <div class="finding-card">
-                <h3 class="finding-header">🤝 Vendor Management</h3>
-                <div class="finding-content">
-                    <div class="finding-item">
-                        <h5>Why This Matters</h5>
-                        <p>{{Vendors_Why}}</p>
-                    </div>
-                    <div class="finding-item">
-                        <h5>Assessment Findings</h5>
-                        <p>{{Vendors_Findings}}</p>
-                    </div>
-                </div>
-            </div>
+    <h2 class="c10"><span class="c6">Findings by Area</span></h2>
 
-            <!-- Human Oversight -->
-            <div class="finding-card">
-                <h3 class="finding-header">👥 Human Oversight</h3>
-                <div class="finding-content">
-                    <div class="finding-item">
-                        <h5>Why This Matters</h5>
-                        <p>{{HumanOversight_Why}}</p>
-                    </div>
-                    <div class="finding-item">
-                        <h5>Assessment Findings</h5>
-                        <p>{{HumanOversight_Findings}}</p>
-                    </div>
-                </div>
-            </div>
+    <h3 class="c10"><span class="c7">Governance</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Governance_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Governance_Findings}}</span></p>
 
-            <!-- Transparency -->
-            <div class="finding-card">
-                <h3 class="finding-header">🔍 Transparency</h3>
-                <div class="finding-content">
-                    <div class="finding-item">
-                        <h5>Why This Matters</h5>
-                        <p>{{Transparency_Why}}</p>
-                    </div>
-                    <div class="finding-item">
-                        <h5>Assessment Findings</h5>
-                        <p>{{Transparency_Findings}}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h3 class="c10"><span class="c7">Data</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Data_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Data_Findings}}</span></p>
 
-    <!-- 30-Day Action Plan Section -->
-    <div class="section">
-        <h2 class="section-header">30-Day Action Plan</h2>
-        <div class="plan-container">
-            <table class="plan-table">
-                <thead>
-                    <tr>
-                        <th>Priority Task</th>
-                        <th>Owner</th>
-                        <th>Effort</th>
-                        <th>Impact</th>
-                        <th>Due Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Establish AI governance framework</td>
-                        <td>Chief AI Officer</td>
-                        <td>Medium</td>
-                        <td>High</td>
-                        <td>Week 1</td>
-                    </tr>
-                    <tr>
-                        <td>Conduct data privacy audit</td>
-                        <td>Data Protection Officer</td>
-                        <td>High</td>
-                        <td>High</td>
-                        <td>Week 2</td>
-                    </tr>
-                    <tr>
-                        <td>Implement security controls</td>
-                        <td>CISO</td>
-                        <td>High</td>
-                        <td>Critical</td>
-                        <td>Week 1</td>
-                    </tr>
-                    <tr>
-                        <td>Vendor risk assessment</td>
-                        <td>Procurement Team</td>
-                        <td>Medium</td>
-                        <td>Medium</td>
-                        <td>Week 3</td>
-                    </tr>
-                    <tr>
-                        <td>Human oversight training</td>
-                        <td>HR & Operations</td>
-                        <td>Low</td>
-                        <td>Medium</td>
-                        <td>Week 4</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <h3 class="c10"><span class="c7">Security</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Security_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Security_Findings}}</span></p>
 
-    <!-- Appendix Section -->
-    <div class="section">
-        <h2 class="section-header">Regulatory Context</h2>
-        <div class="appendix-grid">
-            <div class="appendix-card">
-                <h3 class="appendix-header">🇪🇺 EU AI Act Overview</h3>
-                <div class="appendix-content">
-                    {{EU_AI_Act_101}}
-                </div>
-            </div>
-            
-            <div class="appendix-card">
-                <h3 class="appendix-header">🇺🇸 US Healthcare Compliance</h3>
-                <div class="appendix-content">
-                    {{US_Healthcare_Lens}}
-                </div>
-            </div>
-        </div>
-    </div>
+    <h3 class="c10"><span class="c7">Vendors</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Vendors_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Vendors_Findings}}</span></p>
 
-    <!-- Footer -->
-    <div class="footer">
-        <p><strong>AI Compliance Readiness Check Report</strong></p>
-        <p>Generated on {{ReportDate}} | Confidential Document</p>
-        <p>For questions about this report, contact your compliance team.</p>
-    </div>
+    <h3 class="c10"><span class="c7">Human Oversight</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{HumanOversight_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{HumanOversight_Findings}}</span></p>
 
-    <script>
-        // Dynamic risk level styling
-        document.addEventListener('DOMContentLoaded', function() {
-            const riskLevels = document.querySelectorAll('.risk-level');
-            riskLevels.forEach(level => {
-                const text = level.textContent.toLowerCase();
-                level.className = 'risk-level';
-                
-                if (text.includes('low')) {
-                    level.classList.add('risk-low');
-                } else if (text.includes('medium')) {
-                    level.classList.add('risk-medium');
-                } else if (text.includes('high')) {
-                    level.classList.add('risk-high');
-                } else if (text.includes('critical')) {
-                    level.classList.add('risk-critical');
-                }
-            });
-        });
-    </script>
-</body>
+    <h3 class="c10"><span class="c7">Transparency</span></h3>
+    <p class="c0"><span class="c2">Why it matters: {{Transparency_Why}}</span></p>
+    <p class="c0"><span class="c2">What we saw: {{Transparency_Findings}}</span></p>
+
+    <h2 class="c10"><span class="c6">30-Day Plan</span></h2>
+    <table class="c5">
+      <tr>
+        <td class="c3"><p class="c0"><span class="c2">Task</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Owner</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Effort (S/M/L)</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Impact</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">Due Date</span></p></td>
+      </tr>
+      <!-- Empty rows for plan entries -->
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+      <tr><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td><td class="c3"></td></tr>
+    </table>
+
+    <h2 class="c10"><span class="c6">Appendix</span></h2>
+
+    <h3 class="c10"><span class="c7">EU AI Act 101</span></h3>
+    <p class="c0"><span class="c2">{{EU_AI_Act_101}}</span></p>
+
+    <h3 class="c10"><span class="c7">US Healthcare Automation Lens</span></h3>
+    <p class="c0"><span class="c2">{{US_Healthcare_Lens}}</span></p>
+  </body>
 </html>

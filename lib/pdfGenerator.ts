@@ -80,7 +80,7 @@ export async function generateLocalPDF(data: ReportData): Promise<Blob> {
     container.style.width = '800px'; // Set fixed width for consistent rendering
     document.body.appendChild(container);
     
-    // 4. Convert to canvas and generate PDF
+    // 4. Convert to canvas and generate multi-page PDF
     console.log('🖼️ Converting to canvas...');
     const canvas = await html2canvas(container, { 
       scale: 2,
@@ -89,15 +89,31 @@ export async function generateLocalPDF(data: ReportData): Promise<Blob> {
       backgroundColor: '#ffffff'
     });
     
-    console.log('📄 Generating PDF...');
+    console.log('📄 Generating multi-page PDF...');
     const pdf = new jsPDF('p', 'pt', 'a4');
     const imgData = canvas.toDataURL('image/png');
     const imgProps = pdf.getImageProperties(imgData);
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = imgProps.width;
+    const imgHeight = imgProps.height;
     
-    // Add image to PDF
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    // Calculate how many pages we need
+    const ratio = imgWidth / pdfWidth;
+    const scaledHeight = imgHeight / ratio;
+    const totalPages = Math.ceil(scaledHeight / pdfHeight);
+    
+    console.log(`📄 Creating ${totalPages} pages for content`);
+    
+    // Add content to multiple pages
+    for (let i = 0; i < totalPages; i++) {
+      if (i > 0) {
+        pdf.addPage();
+      }
+      
+      const yOffset = -i * pdfHeight;
+      pdf.addImage(imgData, 'PNG', 0, yOffset, pdfWidth, scaledHeight);
+    }
     
     // 5. Cleanup
     console.log('🧹 Cleaning up...');
