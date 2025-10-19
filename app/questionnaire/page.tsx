@@ -11,8 +11,8 @@ import { questions } from '@/lib/questions';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-// Lazy load heavy components
-const DynamicQuestionCard = dynamic(() => import('@/components/questionnaire/QuestionCard').then(mod => ({ default: mod.QuestionCard })), {
+// Lazy load free questionnaire components
+const DynamicFreeQuestionCard = dynamic(() => import('@/components/questionnaire/QuestionCard').then(mod => ({ default: mod.QuestionCard })), {
   loading: () => (
     <Card className="w-full">
       <CardContent className="pt-6">
@@ -207,7 +207,7 @@ export default function QuestionnairePage() {
                   </CardContent>
                 </Card>
               }>
-                <DynamicQuestionCard
+                <DynamicFreeQuestionCard
                   questionNumber={currentQuestion.id}
                   questionText={currentQuestion.text}
                   answer={currentAnswer}

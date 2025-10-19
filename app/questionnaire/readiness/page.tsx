@@ -15,8 +15,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 
-// Lazy load questionnaire components
-const DynamicQuestionCard = dynamic(() => import('@/components/questionnaire/QuestionCard').then(mod => ({ default: mod.QuestionCard })), {
+// Lazy load paid questionnaire components
+const DynamicPaidQuestionnaire = dynamic(() => import('@/components/questionnaire/PaidQuestionCard').then(mod => ({ default: mod.PaidQuestionCard })), {
   loading: () => (
     <Card className={`border-2 shadow-lg ${animations.card.hover}`}>
       <CardHeader>
