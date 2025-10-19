@@ -215,7 +215,7 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     const actionPlan: ActionPlanItem[] = [];
     
     // Security ≥ 2 AND MFA = No → "Enable MFA and RBAC for all admin users"
-    if (heatmap.security >= 2 && answers.access_controls >= 2) {
+    if (heatmap.security >= 2 && (answers.access_controls >= 2 || answers.access_controls === 2.1)) {
       actionPlan.push({
         task: 'Enable MFA and RBAC for all admin users',
         owner: 'IT',

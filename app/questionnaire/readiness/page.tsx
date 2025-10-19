@@ -13,66 +13,7 @@ import { animations } from '@/lib/animations';
 import { generateClientPDF, formatReportData } from '@/lib/clientPdfGenerator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import dynamic from 'next/dynamic';
 
-// Lazy load paid questionnaire components
-const DynamicPaidQuestionnaire = dynamic(() => import('@/components/questionnaire/PaidQuestionCard').then(mod => ({ default: mod.PaidQuestionCard })), {
-  loading: () => (
-    <Card className={`border-2 shadow-lg ${animations.card.hover}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-3">
-          <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-6 bg-gray-200 rounded animate-pulse w-24"></div>
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-8">
-        {/* Question 1 Skeleton */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
-                <div className="block w-full p-3 pl-10 border-2 border-gray-200 rounded-lg">
-                  <div className="text-left space-y-1">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3 mb-1"></div>
-                    <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Question 2 Skeleton */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
-                <div className="block w-full p-3 pl-10 border-2 border-gray-200 rounded-lg">
-                  <div className="text-left space-y-1">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3 mb-1"></div>
-                    <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  ),
-  ssr: false
-});
 
 interface Question {
   id: string;
@@ -108,7 +49,7 @@ const categories: Category[] = [
         options: [
           { value: 0, label: 'Yes', description: 'Written AI governance policy in place' },
           { value: 2, label: 'Partial', description: 'Partial policy or draft version' },
-          { value: 2, label: 'Draft', description: 'Policy in draft form' },
+          { value: 2.1, label: 'Draft', description: 'Policy in draft form' },
           { value: 3, label: 'No', description: 'No written AI governance policy' }
         ]
       }
@@ -174,9 +115,9 @@ const categories: Category[] = [
         text: 'Which AI providers are used?',
         options: [
           { value: 1, label: 'OpenAI via Azure', description: 'Using OpenAI through Azure' },
-          { value: 1, label: 'Other US', description: 'Other US-based providers' },
+          { value: 1.1, label: 'Other US', description: 'Other US-based providers' },
           { value: 2, label: 'OSS', description: 'Open source solutions' },
-          { value: 2, label: 'Multiple', description: 'Multiple providers' }
+          { value: 2.1, label: 'Multiple', description: 'Multiple providers' }
         ]
       },
       {
@@ -200,7 +141,7 @@ const categories: Category[] = [
         text: 'Where is human review applied?',
         options: [
           { value: 0, label: 'Pre-deployment', description: 'Human review before deployment' },
-          { value: 0, label: 'Real-time', description: 'Real-time human review' },
+          { value: 0.1, label: 'Real-time', description: 'Real-time human review' },
           { value: 2, label: 'Post-hoc', description: 'Human review after decisions' },
           { value: 3, label: 'None', description: 'No human review applied' }
         ]

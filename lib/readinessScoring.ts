@@ -74,8 +74,16 @@ export function calculateAreaScore(answers: Record<string, number>, category: st
     return { score: 0, label: 'Low' };
   }
 
+  // Convert decimal values to their base values for scoring
+  const normalizedScores = scores.map(score => {
+    if (score === 0.1) return 0; // Real-time = Pre-deployment (both are 0)
+    if (score === 1.1) return 1; // Other US = OpenAI via Azure (both are 1)
+    if (score === 2.1) return 2; // Draft = Partial, Multiple = OSS (both are 2)
+    return Math.floor(score); // Round down to get base value
+  });
+
   // Calculate average and round to nearest integer as per client spec
-  const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  const averageScore = normalizedScores.reduce((sum, score) => sum + score, 0) / normalizedScores.length;
   const roundedScore = Math.round(averageScore);
 
   // Determine label based on score (0-1 = Low, 2 = Medium, 3 = High)
