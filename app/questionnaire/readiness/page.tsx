@@ -488,14 +488,20 @@ export default function ReadinessQuestionnairePage() {
             </div>
 
             {/* Category Navigation */}
-            <div className="flex flex-wrap gap-2 mb-8">
+            <div className="flex flex-wrap gap-4 mb-8">
               {categories.map((category, index) => (
                 <Button
                   key={category.id}
                   variant={currentCategory === index ? "default" : "outline"}
                   size="sm"
                   onClick={() => setCurrentCategory(index)}
-                  className="flex items-center space-x-2"
+                  className={`
+                    flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200
+                    ${currentCategory === index 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
+                      : 'bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
+                    }
+                  `}
                 >
                   {category.icon}
                   <span>{category.name}</span>
@@ -536,15 +542,15 @@ export default function ReadinessQuestionnairePage() {
                           <Label 
                             htmlFor={`${question.id}-${option.value}`} 
                             className={`
-                              block p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md
+                              block w-full p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg
                               ${answers[question.id] === option.value 
-                                ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200' 
-                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25'
+                                ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200 transform scale-105' 
+                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25 hover:shadow-md'
                               }
                             `}
                           >
-                            <div className="text-center space-y-2">
-                              <div className="font-semibold text-gray-900">{option.label}</div>
+                            <div className="text-center space-y-3">
+                              <div className="font-bold text-lg text-gray-900">{option.label}</div>
                               <div className="text-sm text-gray-600 leading-relaxed">{option.description}</div>
                             </div>
                           </Label>
