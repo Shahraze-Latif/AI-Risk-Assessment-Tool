@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText, ChevronRight } from 'lucide-react';
 import { animations } from '@/lib/animations';
 import { generateClientPDF, formatReportData } from '@/lib/clientPdfGenerator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Question {
   id: string;
@@ -578,27 +579,35 @@ export default function ReadinessQuestionnairePage() {
               <Progress value={getProgress()} className="h-2" />
             </div>
 
-            {/* Category Navigation */}
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-              {categories.map((category, index) => (
-                <Button
-                  key={category.id}
-                  variant={currentCategory === index ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentCategory(index)}
-                  className={`
-                    flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 flex-1 min-w-0
-                    ${currentCategory === index 
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
-                      : 'bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400'
-                    }
-                  `}
-                >
-                  {category.icon}
-                  <span className="truncate">{category.name}</span>
-                </Button>
-              ))}
-            </div>
+                {/* Category Navigation */}
+                <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+                  <TooltipProvider>
+                    {categories.map((category, index) => (
+                      <Tooltip key={category.id}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={currentCategory === index ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentCategory(index)}
+                            className={`
+                              flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 flex-1 min-w-0
+                              ${currentCategory === index 
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
+                                : 'bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400'
+                              }
+                            `}
+                          >
+                            {category.icon}
+                            <span className="truncate">{category.name}</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{category.name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </TooltipProvider>
+                </div>
 
             {/* Current Category Questions */}
             <Card className={`border-2 shadow-lg ${animations.card.hover}`}>
