@@ -488,7 +488,7 @@ export default function ReadinessQuestionnairePage() {
             </div>
 
             {/* Category Navigation */}
-            <div className="flex flex-wrap gap-4 mb-8">
+            <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
               {categories.map((category, index) => (
                 <Button
                   key={category.id}
@@ -496,15 +496,15 @@ export default function ReadinessQuestionnairePage() {
                   size="sm"
                   onClick={() => setCurrentCategory(index)}
                   className={`
-                    flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200
+                    flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 flex-1 min-w-0
                     ${currentCategory === index 
                       ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
-                      : 'bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
+                      : 'bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400'
                     }
                   `}
                 >
                   {category.icon}
-                  <span>{category.name}</span>
+                  <span className="truncate">{category.name}</span>
                 </Button>
               ))}
             </div>
@@ -530,7 +530,7 @@ export default function ReadinessQuestionnairePage() {
                     <RadioGroup
                       value={answers[question.id]?.toString() || ''}
                       onValueChange={(value) => handleAnswerChange(question.id, parseInt(value))}
-                      className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                      className="grid grid-cols-1 gap-4"
                     >
                       {question.options.map((option) => (
                         <div key={option.value} className="relative">
