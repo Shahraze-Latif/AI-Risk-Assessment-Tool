@@ -243,13 +243,14 @@ export default function ReadinessQuestionnairePage() {
         
         if (response.ok) {
           console.log('✅ Payment verified successfully');
-          setPaymentStatus('verified');
           // Show success toast immediately
           toast({
             title: "Payment Successful! 🎉",
             description: "Your payment has been verified. You can now proceed with the assessment.",
             duration: 3000,
           });
+          // Set verified status after toast
+          setPaymentStatus('verified');
         } else if (response.status === 202) {
           // Payment is still processing (webhook hasn't completed yet)
           console.log('⏳ Payment still processing via webhook, retrying...');

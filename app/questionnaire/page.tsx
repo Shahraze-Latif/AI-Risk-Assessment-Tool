@@ -57,6 +57,7 @@ export default function QuestionnairePage() {
     const sessionId = searchParams.get('session_id');
     if (sessionId) {
       console.log('🔄 Redirecting to paid questionnaire with session:', sessionId);
+      // Immediate redirect without showing any content
       router.replace(`/questionnaire/readiness?session_id=${sessionId}`);
       return;
     }
@@ -132,6 +133,19 @@ export default function QuestionnairePage() {
 
   // Show loading while checking for session_id
   if (isCheckingSession) {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      // Show minimal loading for paid questionnaire redirect
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto" />
+            <p className="text-sm text-gray-600">Redirecting to paid questionnaire...</p>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <Layout>
