@@ -105,14 +105,18 @@ export async function generateLocalPDF(data: ReportData): Promise<Blob> {
     
     console.log(`📄 Creating ${totalPages} pages for content`);
     
-    // Add content to multiple pages
+    // Add content to multiple pages with proper margins
+    const margin = 40; // 1 inch margins
+    const contentWidth = pdfWidth - (2 * margin);
+    const contentHeight = pdfHeight - (2 * margin);
+    
     for (let i = 0; i < totalPages; i++) {
       if (i > 0) {
         pdf.addPage();
       }
       
       const yOffset = -i * pdfHeight;
-      pdf.addImage(imgData, 'PNG', 0, yOffset, pdfWidth, scaledHeight);
+      pdf.addImage(imgData, 'PNG', margin, margin + yOffset, contentWidth, scaledHeight);
     }
     
     // 5. Cleanup

@@ -37,6 +37,9 @@ export interface ReportData {
   Transparency_Why: string;
   Transparency_Findings: string;
   
+  // 30-Day Action Plan
+  ActionPlanRows: string;
+  
   // Appendix
   EU_AI_Act_101: string;
   US_Healthcare_Lens: string;
@@ -108,14 +111,18 @@ export async function generateClientPDF(data: ReportData, filename?: string): Pr
     
     console.log(`📄 Creating ${totalPages} pages for content`);
     
-    // Add content to multiple pages
+    // Add content to multiple pages with proper margins
+    const margin = 40; // 1 inch margins
+    const contentWidth = pdfWidth - (2 * margin);
+    const contentHeight = pdfHeight - (2 * margin);
+    
     for (let i = 0; i < totalPages; i++) {
       if (i > 0) {
         pdf.addPage();
       }
       
       const yOffset = -i * pdfHeight;
-      pdf.addImage(imgData, 'PNG', 0, yOffset, pdfWidth, scaledHeight);
+      pdf.addImage(imgData, 'PNG', margin, margin + yOffset, contentWidth, scaledHeight);
     }
     
     // 5. Download the PDF
@@ -147,8 +154,11 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     day: 'numeric'
   });
   
-  // Extract area scores
-  const areaScores = assessmentData.area_scores || {};
+  console.log('📊 Processing assessment data:', assessmentData);
+  
+  // Extract area scores - handle both direct and nested structures
+  const areaScores = assessmentData.area_scores || assessmentData.areaScores || {};
+  console.log('📊 Area scores:', areaScores);
   
   // Generate top risks (areas with lowest scores)
   const sortedAreas = Object.entries(areaScores)
@@ -161,6 +171,9 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     .sort(([,a], [,b]) => (b as number) - (a as number))
     .slice(0, 2)
     .map(([area]) => area);
+  
+  console.log('📊 Top risks:', sortedAreas);
+  console.log('📊 Quick wins:', quickWins);
   
   // Generate findings for each area
   const generateFindings = (area: string, score: number) => {
@@ -182,36 +195,86 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     return whyMap[area] || `Strong ${area} practices are essential for AI compliance and risk management.`;
   };
   
+  // Define action plan item interface
+  interface ActionPlanItem {
+    task: string;
+    owner: string;
+    effort: string;
+    impact: string;
+    due: string;
+  }
+  
+  // Generate 30-day action plan
+  const generateActionPlan = (): ActionPlanItem[] => {
+    const plan = assessmentData.plan || [];
+    if (plan.length > 0) {
+      return plan.map((item: any, index: number) => {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + (index + 1) * 7); // Spread over 4 weeks
+        
+        return {
+          task: item.task || `Action ${index + 1}`,
+          owner: item.owner || 'Compliance Team',
+          effort: item.effort || 'Medium',
+          impact: item.impact || 'High',
+          due: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        };
+      });
+    }
+    
+    // Default action plan if none provided
+    return [
+      { task: 'Review AI governance policies', owner: 'Legal Team', effort: 'Small', impact: 'High', due: 'Week 1' },
+      { task: 'Implement data quality controls', owner: 'Data Team', effort: 'Medium', impact: 'High', due: 'Week 2' },
+      { task: 'Enhance security monitoring', owner: 'Security Team', effort: 'Large', impact: 'Critical', due: 'Week 3' },
+      { task: 'Establish vendor oversight', owner: 'Procurement', effort: 'Medium', impact: 'Medium', due: 'Week 4' }
+    ];
+  };
+  
+  const actionPlan = generateActionPlan();
+  console.log('📊 Action plan:', actionPlan);
+  
   return {
     // Header Section
     ClientName: clientName,
     ReportDate: currentDate,
     
     // Executive Summary
-    TopRisks: sortedAreas.join(', '),
-    QuickWins: quickWins.join(', '),
+    TopRisks: sortedAreas.length > 0 ? sortedAreas.join(', ') : 'Governance, Data, Security',
+    QuickWins: quickWins.length > 0 ? quickWins.join(', ') : 'Transparency, Human Oversight',
     
-    // Risk Heatmap
-    Governance_Level: getRiskLevel(areaScores.Governance || 0),
-    Data_Level: getRiskLevel(areaScores.Data || 0),
-    Security_Level: getRiskLevel(areaScores.Security || 0),
-    Vendors_Level: getRiskLevel(areaScores.Vendors || 0),
-    HumanOversight_Level: getRiskLevel(areaScores.HumanOversight || 0),
-    Transparency_Level: getRiskLevel(areaScores.Transparency || 0),
+    // Risk Heatmap - handle different naming conventions
+    Governance_Level: getRiskLevel(areaScores.governance || areaScores.Governance || 0),
+    Data_Level: getRiskLevel(areaScores.data || areaScores.Data || 0),
+    Security_Level: getRiskLevel(areaScores.security || areaScores.Security || 0),
+    Vendors_Level: getRiskLevel(areaScores.vendors || areaScores.Vendors || 0),
+    HumanOversight_Level: getRiskLevel(areaScores.human_oversight || areaScores.HumanOversight || 0),
+    Transparency_Level: getRiskLevel(areaScores.transparency || areaScores.Transparency || 0),
     
     // Findings by Area
     Governance_Why: generateWhy('Governance'),
-    Governance_Findings: generateFindings('Governance', areaScores.Governance || 0),
+    Governance_Findings: generateFindings('Governance', areaScores.governance || areaScores.Governance || 0),
     Data_Why: generateWhy('Data'),
-    Data_Findings: generateFindings('Data', areaScores.Data || 0),
+    Data_Findings: generateFindings('Data', areaScores.data || areaScores.Data || 0),
     Security_Why: generateWhy('Security'),
-    Security_Findings: generateFindings('Security', areaScores.Security || 0),
+    Security_Findings: generateFindings('Security', areaScores.security || areaScores.Security || 0),
     Vendors_Why: generateWhy('Vendors'),
-    Vendors_Findings: generateFindings('Vendors', areaScores.Vendors || 0),
+    Vendors_Findings: generateFindings('Vendors', areaScores.vendors || areaScores.Vendors || 0),
     HumanOversight_Why: generateWhy('HumanOversight'),
-    HumanOversight_Findings: generateFindings('Human Oversight', areaScores.HumanOversight || 0),
+    HumanOversight_Findings: generateFindings('Human Oversight', areaScores.human_oversight || areaScores.HumanOversight || 0),
     Transparency_Why: generateWhy('Transparency'),
-    Transparency_Findings: generateFindings('Transparency', areaScores.Transparency || 0),
+    Transparency_Findings: generateFindings('Transparency', areaScores.transparency || areaScores.Transparency || 0),
+    
+    // 30-Day Action Plan
+    ActionPlanRows: actionPlan.map((item: ActionPlanItem) => 
+      `<tr>
+        <td class="c3"><p class="c0"><span class="c2">${item.task}</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">${item.owner}</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">${item.effort}</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">${item.impact}</span></p></td>
+        <td class="c3"><p class="c0"><span class="c2">${item.due}</span></p></td>
+      </tr>`
+    ).join(''),
     
     // Appendix
     EU_AI_Act_101: 'The EU AI Act establishes a comprehensive regulatory framework for AI systems, categorizing them by risk level and imposing specific requirements for high-risk AI applications.',
