@@ -537,21 +537,21 @@ export default function ReadinessQuestionnairePage() {
                           <RadioGroupItem 
                             value={option.value.toString()} 
                             id={`${question.id}-${option.value}`}
-                            className="sr-only"
+                            className="absolute left-3 top-3"
                           />
                           <Label 
                             htmlFor={`${question.id}-${option.value}`} 
                             className={`
-                              block w-full p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg
+                              block w-full p-3 pl-10 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md
                               ${answers[question.id] === option.value 
-                                ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200 transform scale-105' 
-                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25 hover:shadow-md'
+                                ? 'border-blue-500 bg-blue-50 shadow-md ring-1 ring-blue-200' 
+                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
                               }
                             `}
                           >
-                            <div className="text-center space-y-3">
-                              <div className="font-bold text-lg text-gray-900">{option.label}</div>
-                              <div className="text-sm text-gray-600 leading-relaxed">{option.description}</div>
+                            <div className="text-left space-y-1">
+                              <div className="font-medium text-sm text-gray-900">{option.label}</div>
+                              <div className="text-xs text-gray-600 leading-relaxed">{option.description}</div>
                             </div>
                           </Label>
                         </div>
