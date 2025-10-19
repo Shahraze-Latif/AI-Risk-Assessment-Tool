@@ -210,72 +210,72 @@ export function formatReportData(assessmentData: any, clientName: string): Repor
     due: string;
   }
   
-  // Generate 30-day action plan based on assessment gaps
+  // Generate 30-day action plan based on exact client specification
   const generateActionPlan = (): ActionPlanItem[] => {
     const actionPlan: ActionPlanItem[] = [];
     
-    // Check Security gaps (≥ 2) and MFA status
+    // Security ≥ 2 AND MFA = No → "Enable MFA and RBAC for all admin users"
     if (heatmap.security >= 2) {
       actionPlan.push({
         task: 'Enable MFA and RBAC for all admin users',
         owner: 'IT',
-        effort: 'Small',
+        effort: 'S',
         impact: 'High',
         due: 'Week 1'
       });
     }
     
-    // Check Vendors gaps (≥ 2) or no DPA
-    if (heatmap.vendors >= 2) {
+    // Vendors ≥ 2 OR no DPA → "Execute DPA with AI provider; review SOC2/ISO docs"
+    if (heatmap.vendors >= 2 || answers.contracts >= 2) {
       actionPlan.push({
         task: 'Execute DPA with AI provider; review SOC2/ISO docs',
         owner: 'Ops/Legal',
-        effort: 'Medium',
+        effort: 'M',
         impact: 'High',
         due: 'Week 2'
       });
     }
     
-    // Check Human Oversight gaps (≥ 2)
+    // Human Oversight ≥ 2 → "Add real-time human review for escalations; define fallback"
     if (heatmap.human_oversight >= 2) {
       actionPlan.push({
         task: 'Add real-time human review for escalations; define fallback',
         owner: 'Product',
-        effort: 'Medium',
+        effort: 'M',
         impact: 'High',
         due: 'Week 2'
       });
     }
     
-    // Check Data gaps (≥ 2) - assuming PHI handling needs improvement
-    if (heatmap.data >= 2) {
+    // Data ≥ 2 AND PHI = Yes → "Limit PHI in prompts; add redaction"
+    if (heatmap.data >= 2 && answers.sensitive_data === 3) {
       actionPlan.push({
         task: 'Limit PHI in prompts; add redaction',
         owner: 'Data',
-        effort: 'Medium',
+        effort: 'M',
         impact: 'High',
         due: 'Week 3'
       });
     }
     
-    // Check Transparency gaps (≥ 2)
+    // Transparency ≥ 2 → "Add AI disclosure text in UI and Help Center"
     if (heatmap.transparency >= 2) {
       actionPlan.push({
         task: 'Add AI disclosure text in UI and Help Center',
         owner: 'Product',
-        effort: 'Small',
-        impact: 'Medium',
+        effort: 'S',
+        impact: 'Med',
         due: 'Week 3'
       });
     }
     
-    // Check Governance gaps (≥ 2)
+    // Governance ≥ 2 → "Publish 1-page AI policy; assign RACI for approvals"
     if (heatmap.governance >= 2) {
       actionPlan.push({
         task: 'Publish 1-page AI policy; assign RACI for approvals',
         owner: 'Leadership',
-        effort: 'Small',
-        impact: 'Medium',
+        effort: 'S',
+        impact: 'Med',
         due: 'Week 4'
       });
     }

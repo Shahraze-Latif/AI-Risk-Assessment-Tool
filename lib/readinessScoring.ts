@@ -127,42 +127,42 @@ export function getOverallLabel(weightedScore: number): 'Low' | 'Medium' | 'High
 }
 
 /**
- * Generate 30-Day Plan tasks based on scoring rules
+ * Generate 30-Day Plan tasks based on exact client specification
  * @param areaScores - Area scores for all categories
  * @param answers - Raw user answers
- * @returns Array of plan tasks
+ * @returns Array of plan tasks with full details
  */
 export function generatePlan(areaScores: Record<string, AreaScore>, answers: Record<string, number>): string[] {
   const plan: string[] = [];
 
-  // Security ≥ 2 and MFA = No → "Enable MFA and RBAC for admins"
+  // Security ≥ 2 AND MFA = No → "Enable MFA and RBAC for all admin users"
   if (areaScores.security.score >= 2) {
-    plan.push("Enable MFA and RBAC for admins");
+    plan.push("Enable MFA and RBAC for all admin users");
   }
 
-  // Vendors ≥ 2 or no DPA → "Execute DPA with AI provider"
+  // Vendors ≥ 2 OR no DPA → "Execute DPA with AI provider; review SOC2/ISO docs"
   if (areaScores.vendors.score >= 2 || answers.contracts >= 2) {
-    plan.push("Execute DPA with AI provider");
+    plan.push("Execute DPA with AI provider; review SOC2/ISO docs");
   }
 
-  // Human Oversight ≥ 2 → "Add real-time human review"
+  // Human Oversight ≥ 2 → "Add real-time human review for escalations; define fallback"
   if (areaScores.human_oversight.score >= 2) {
-    plan.push("Add real-time human review");
+    plan.push("Add real-time human review for escalations; define fallback");
   }
 
-  // Data ≥ 2 and PHI = Yes → "Limit PHI in prompts; add redaction"
+  // Data ≥ 2 AND PHI = Yes → "Limit PHI in prompts; add redaction"
   if (areaScores.data.score >= 2 && answers.sensitive_data === 3) {
     plan.push("Limit PHI in prompts; add redaction");
   }
 
-  // Transparency ≥ 2 → "Add AI disclosure text in UI"
+  // Transparency ≥ 2 → "Add AI disclosure text in UI and Help Center"
   if (areaScores.transparency.score >= 2) {
-    plan.push("Add AI disclosure text in UI");
+    plan.push("Add AI disclosure text in UI and Help Center");
   }
 
-  // Governance ≥ 2 → "Publish 1-page AI policy"
+  // Governance ≥ 2 → "Publish 1-page AI policy; assign RACI for approvals"
   if (areaScores.governance.score >= 2) {
-    plan.push("Publish 1-page AI policy");
+    plan.push("Publish 1-page AI policy; assign RACI for approvals");
   }
 
   return plan;

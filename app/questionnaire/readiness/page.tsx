@@ -69,9 +69,9 @@ const categories: Category[] = [
         id: 'data_geography',
         text: 'Do you know where your data is stored and processed geographically?',
         options: [
-          { value: 0, label: 'No', description: 'No data storage concerns' },
+          { value: 0, label: 'Yes', description: 'Clear understanding of data geography' },
           { value: 2, label: 'Unsure', description: 'Uncertain about data geography' },
-          { value: 3, label: 'Yes', description: 'Data stored in multiple jurisdictions' }
+          { value: 3, label: 'No', description: 'No knowledge of data geography' }
         ]
       }
     ]
@@ -110,8 +110,8 @@ const categories: Category[] = [
         id: 'providers',
         text: 'What AI providers do you use?',
         options: [
-          { value: 1, label: 'OpenAI via Azure', description: 'Using OpenAI through Azure' },
-          { value: 2, label: 'OSS/Multiple', description: 'Open source or multiple providers' },
+          { value: 1, label: 'Azure/single vetted', description: 'Using single vetted provider through Azure' },
+          { value: 2, label: 'OSS/self-hosted/multiple', description: 'Open source, self-hosted, or multiple providers' },
           { value: 3, label: 'Unknown', description: 'Unclear or unknown providers' }
         ]
       },
@@ -135,7 +135,7 @@ const categories: Category[] = [
         id: 'human_in_loop',
         text: 'What level of human oversight do you have?',
         options: [
-          { value: 0, label: 'Pre-deployment/Real-time', description: 'Human review before deployment and real-time monitoring' },
+          { value: 0, label: 'Pre/Real-time', description: 'Human review before deployment and real-time monitoring' },
           { value: 2, label: 'Post-hoc', description: 'Human review after AI decisions' },
           { value: 3, label: 'None', description: 'No human oversight of AI systems' }
         ]
