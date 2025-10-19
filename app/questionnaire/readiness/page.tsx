@@ -501,14 +501,29 @@ export default function ReadinessQuestionnairePage() {
                     <RadioGroup
                       value={answers[question.id]?.toString() || ''}
                       onValueChange={(value) => handleAnswerChange(question.id, parseInt(value))}
-                      className="space-y-3"
+                      className="grid grid-cols-1 md:grid-cols-3 gap-4"
                     >
                       {question.options.map((option) => (
-                        <div key={option.value} className="flex items-start space-x-3">
-                          <RadioGroupItem value={option.value.toString()} id={`${question.id}-${option.value}`} />
-                          <Label htmlFor={`${question.id}-${option.value}`} className="flex-1 cursor-pointer">
-                            <div className="font-medium">{option.label}</div>
-                            <div className="text-sm text-gray-600">{option.description}</div>
+                        <div key={option.value} className="relative">
+                          <RadioGroupItem 
+                            value={option.value.toString()} 
+                            id={`${question.id}-${option.value}`}
+                            className="sr-only"
+                          />
+                          <Label 
+                            htmlFor={`${question.id}-${option.value}`} 
+                            className={`
+                              block p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md
+                              ${answers[question.id] === option.value 
+                                ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200' 
+                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25'
+                              }
+                            `}
+                          >
+                            <div className="text-center space-y-2">
+                              <div className="font-semibold text-gray-900">{option.label}</div>
+                              <div className="text-sm text-gray-600 leading-relaxed">{option.description}</div>
+                            </div>
                           </Label>
                         </div>
                       ))}
