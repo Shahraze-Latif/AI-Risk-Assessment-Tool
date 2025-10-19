@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useCallback, Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/layout/Layout';
 import { QuestionCard } from '@/components/questionnaire/QuestionCard';
 import { Button } from '@/components/ui/button';
@@ -45,10 +45,23 @@ const DynamicQuestionCard = dynamic(() => import('@/components/questionnaire/Que
 
 export default function QuestionnairePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [answers, setAnswers] = useState<(boolean | null)[]>(new Array(questions.length).fill(null));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  // Check for session_id and redirect to paid questionnaire if found
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      console.log('🔄 Redirecting to paid questionnaire with session:', sessionId);
+      router.replace(`/questionnaire/readiness?session_id=${sessionId}`);
+      return;
+    }
+    setIsCheckingSession(false);
+  }, [searchParams, router]);
 
   // Memoized calculations to prevent unnecessary re-renders
   const currentQuestion = useMemo(() => questions[currentQuestionIndex], [currentQuestionIndex]);
@@ -116,6 +129,21 @@ export default function QuestionnairePage() {
 
   const canProceed = useMemo(() => currentAnswer !== null, [currentAnswer]);
   const allAnswered = useMemo(() => answers.every(a => a !== null), [answers]);
+
+  // Show loading while checking for session_id
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Layout>
+          <div className="text-center space-y-4">
+            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
+            <h1 className="text-2xl font-bold text-gray-900">Loading Questionnaire</h1>
+            <p className="text-lg text-gray-700">Please wait while we prepare your assessment...</p>
+          </div>
+        </Layout>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">

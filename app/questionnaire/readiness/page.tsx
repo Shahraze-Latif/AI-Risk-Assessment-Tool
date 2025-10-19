@@ -198,11 +198,15 @@ export default function ReadinessQuestionnairePage() {
     // Verify payment status
     const verifyPayment = async () => {
       try {
+        console.log('🔍 Verifying payment for session:', sessionId);
         const response = await fetch(`/api/verify-payment?session_id=${sessionId}`);
+        
         if (response.ok) {
+          console.log('✅ Payment verified successfully');
           setPaymentStatus('verified');
         } else if (response.status === 202) {
           // Payment is still processing
+          console.log('⏳ Payment still processing, retrying...');
           setPaymentStatus('pending');
           // Retry after 3 seconds
           setTimeout(() => {
@@ -210,16 +214,23 @@ export default function ReadinessQuestionnairePage() {
           }, 3000);
         } else {
           const errorData = await response.json();
+          console.error('❌ Payment verification failed:', errorData);
           setError(errorData.error || 'Payment verification failed');
           setPaymentStatus('failed');
         }
       } catch (err) {
+        console.error('❌ Error verifying payment:', err);
         setError('Failed to verify payment');
         setPaymentStatus('failed');
       }
     };
 
-    verifyPayment();
+    // Add a small delay to prevent flash of free questionnaire
+    const timeoutId = setTimeout(() => {
+      verifyPayment();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [sessionId]);
 
   const handleAnswerChange = (questionId: string, value: number) => {
@@ -285,7 +296,9 @@ export default function ReadinessQuestionnairePage() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
           <div className="text-center space-y-4">
             <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
-            <p className="text-lg text-gray-700">Verifying your payment...</p>
+            <h1 className="text-2xl font-bold text-gray-900">Processing Payment</h1>
+            <p className="text-lg text-gray-700">Please wait while we verify your payment...</p>
+            <p className="text-sm text-gray-500">This may take a few moments</p>
           </div>
         </div>
       </Layout>
