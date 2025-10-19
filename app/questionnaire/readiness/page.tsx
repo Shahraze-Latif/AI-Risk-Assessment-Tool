@@ -18,27 +18,54 @@ import dynamic from 'next/dynamic';
 // Lazy load questionnaire components
 const DynamicQuestionCard = dynamic(() => import('@/components/questionnaire/QuestionCard').then(mod => ({ default: mod.QuestionCard })), {
   loading: () => (
-    <Card className="w-full">
-      <CardContent className="pt-6">
+    <Card className={`border-2 shadow-lg ${animations.card.hover}`}>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-3">
+          <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-6 bg-gray-200 rounded animate-pulse w-24"></div>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-8">
+        {/* Question 1 Skeleton */}
         <div className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 animate-pulse">
-              <div className="w-4 h-4 bg-gray-300 rounded"></div>
-            </div>
-            <div className="flex-1">
-              <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4"></div>
-            </div>
+          <div className="space-y-2">
+            <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
           </div>
-          <div className="flex space-x-3 pl-11">
-            <Button disabled className="flex-1">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Yes
-            </Button>
-            <Button disabled className="flex-1">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              No
-            </Button>
+          
+          <div className="grid grid-cols-1 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="block w-full p-3 pl-10 border-2 border-gray-200 rounded-lg">
+                  <div className="text-left space-y-1">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3 mb-1"></div>
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Question 2 Skeleton */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="block w-full p-3 pl-10 border-2 border-gray-200 rounded-lg">
+                  <div className="text-left space-y-1">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3 mb-1"></div>
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>
@@ -348,30 +375,30 @@ export default function ReadinessQuestionnairePage() {
   };
 
   // Only show loading for initial verification, not for successful payment
-  if (paymentStatus === 'loading') {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-          <div className="text-center space-y-6">
-            <div className="relative">
-              <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
-              <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-gray-900">Welcome Back!</h1>
-              <p className="text-lg text-gray-700">Verifying your payment and preparing your assessment...</p>
-              <p className="text-sm text-gray-500">Setting up your personalized AI Compliance Readiness Check</p>
-            </div>
-            <div className="flex items-center justify-center space-x-2 text-blue-600">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  // if (paymentStatus === 'loading') {
+  //   return (
+  //     <Layout>
+  //       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+  //         <div className="text-center space-y-6">
+  //           <div className="relative">
+  //             <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
+  //             <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
+  //           </div>
+  //           <div className="space-y-2">
+  //             <h1 className="text-3xl font-bold text-gray-900">Please Wait</h1>
+  //             <p className="text-lg text-gray-700">Verifying your payment and preparing your assessment...</p>
+  //             <p className="text-sm text-gray-500">Setting up your personalized AI Compliance Readiness Check</p>
+  //           </div>
+  //           <div className="flex items-center justify-center space-x-2 text-blue-600">
+  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </Layout>
+  //   );
+  // }
 
   // Keep webhook processing and pending states for other use cases
   if (paymentStatus === 'webhook_processing') {
