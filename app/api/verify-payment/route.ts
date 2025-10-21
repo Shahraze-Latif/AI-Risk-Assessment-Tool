@@ -4,28 +4,21 @@ import { supabase } from '@/lib/supabaseClient';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('session_id');
+    const paymentIntentId = searchParams.get('payment_intent');
+    const readinessCheckId = searchParams.get('readiness_check');
 
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
+    if (!paymentIntentId || !readinessCheckId) {
+      return NextResponse.json({ error: 'Payment intent ID and readiness check ID are required' }, { status: 400 });
     }
 
-    console.log('🔍 Verifying payment for session:', sessionId);
-
-    // First, check if the readiness check exists at all
-    const { data: allChecks, error: allError } = await supabase
-      .from('readiness_checks')
-      .select('*')
-      .eq('stripe_session_id', sessionId);
-
-    console.log('📊 All readiness checks with this session ID:', allChecks);
-    console.log('❌ Error fetching all checks:', allError);
+    console.log('🔍 Verifying payment for intent:', paymentIntentId);
 
     // Check if the readiness check exists and is paid
     const { data: readinessCheck, error } = await supabase
       .from('readiness_checks')
       .select('*')
-      .eq('stripe_session_id', sessionId)
+      .eq('id', readinessCheckId)
+      .eq('stripe_payment_intent_id', paymentIntentId)
       .eq('status', 'paid')
       .single();
 
@@ -33,22 +26,6 @@ export async function GET(request: NextRequest) {
     console.log('❌ Error fetching paid check:', error);
 
     if (error || !readinessCheck) {
-      // Check if there's a record with this session ID but not paid
-      const { data: pendingCheck } = await supabase
-        .from('readiness_checks')
-        .select('*')
-        .eq('stripe_session_id', sessionId)
-        .single();
-
-      if (pendingCheck) {
-        console.log('⏳ Found pending check:', pendingCheck);
-        return NextResponse.json({ 
-          error: 'Payment is still processing. Please wait a moment and refresh the page.',
-          status: 'pending',
-          readinessCheck: pendingCheck
-        }, { status: 202 });
-      }
-
       return NextResponse.json({ error: 'Payment not found or not verified' }, { status: 404 });
     }
 

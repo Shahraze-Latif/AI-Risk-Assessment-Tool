@@ -52,13 +52,14 @@ export default function QuestionnairePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Check for session_id and redirect to paid questionnaire if found
+  // Check for payment parameters and redirect to paid questionnaire if found
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) {
-      console.log('🔄 Redirecting to paid questionnaire with session:', sessionId);
+    const paymentIntent = searchParams.get('payment_intent');
+    const readinessCheck = searchParams.get('readiness_check');
+    if (paymentIntent && readinessCheck) {
+      console.log('🔄 Redirecting to paid questionnaire with payment intent:', paymentIntent);
       // Immediate redirect without showing any content
-      router.replace(`/questionnaire/readiness?session_id=${sessionId}`);
+      router.replace(`/questionnaire/readiness?payment_intent=${paymentIntent}&readiness_check=${readinessCheck}`);
       return;
     }
     setIsCheckingSession(false);
@@ -131,10 +132,11 @@ export default function QuestionnairePage() {
   const canProceed = useMemo(() => currentAnswer !== null, [currentAnswer]);
   const allAnswered = useMemo(() => answers.every(a => a !== null), [answers]);
 
-  // Show loading while checking for session_id
+  // Show loading while checking for payment parameters
   if (isCheckingSession) {
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) {
+    const paymentIntent = searchParams.get('payment_intent');
+    const readinessCheck = searchParams.get('readiness_check');
+    if (paymentIntent && readinessCheck) {
       // Show minimal loading for paid questionnaire redirect
       return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">

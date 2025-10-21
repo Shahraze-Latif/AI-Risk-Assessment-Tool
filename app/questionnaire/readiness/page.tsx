@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText, ChevronRight } from 'lucide-react';
 import { animations } from '@/lib/animations';
-import { generateClientPDF, formatReportData } from '@/lib/clientPdfGenerator';
+// PDF generation removed - now using Google Sheets
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 
@@ -186,19 +186,19 @@ const categories: Category[] = [
 
 export default function ReadinessQuestionnairePage() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
+  const paymentIntentId = searchParams.get('payment_intent');
+  const readinessCheckId = searchParams.get('readiness_check');
   const { toast } = useToast();
-  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed' | 'pending' | 'webhook_processing'>('loading');
+  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'verified' | 'failed'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [currentCategory, setCurrentCategory] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    if (!sessionId) {
-      setError('No session ID provided');
+    if (!paymentIntentId || !readinessCheckId) {
+      setError('Payment information missing. Please complete the payment process.');
       setPaymentStatus('failed');
       return;
     }
@@ -206,47 +206,43 @@ export default function ReadinessQuestionnairePage() {
     // Verify payment status
     const verifyPayment = async () => {
       try {
-        console.log('🔍 Verifying payment for session:', sessionId, `(attempt ${retryCount + 1})`);
-        const response = await fetch(`/api/verify-payment?session_id=${sessionId}`);
+        console.log('🔍 Verifying payment for intent:', paymentIntentId);
+        const response = await fetch(`/api/verify-payment?payment_intent=${paymentIntentId}&readiness_check=${readinessCheckId}`);
         
         if (response.ok) {
           console.log('✅ Payment verified successfully');
           // Show success toast immediately
           toast({
-            title: "Payment Successful! 🎉",
+            title: "Payment Successful!",
             description: "Your payment has been verified. You can now proceed with the assessment.",
             duration: 3000,
           });
           // Set verified status after toast
           setPaymentStatus('verified');
-        } else if (response.status === 202) {
-          // Payment is still processing (webhook hasn't completed yet)
-          console.log('⏳ Payment still processing via webhook, retrying...');
-          setPaymentStatus('webhook_processing');
-          
-          // Check retry limit (max 15 attempts = 30 seconds)
-          if (retryCount >= 15) {
-            console.error('❌ Max retries reached, payment verification timeout');
-            setError('Payment verification is taking longer than expected. Please contact support if this continues.');
-            setPaymentStatus('failed');
-            return;
-          }
-          
-          setRetryCount(prev => prev + 1);
-          // Retry after 2 seconds for faster response
-          setTimeout(() => {
-            verifyPayment();
-          }, 2000);
         } else {
           const errorData = await response.json();
           console.error('❌ Payment verification failed:', errorData);
           setError(errorData.error || 'Payment verification failed');
           setPaymentStatus('failed');
+          // Show error toast
+          toast({
+            title: "Payment Verification Failed",
+            description: errorData.error || 'We could not verify your payment. Please contact support.',
+            variant: "destructive",
+            duration: 5000,
+          });
         }
       } catch (err) {
         console.error('❌ Error verifying payment:', err);
         setError('Failed to verify payment');
         setPaymentStatus('failed');
+        // Show error toast
+        toast({
+          title: "Payment Verification Error",
+          description: 'Failed to verify payment. Please contact support.',
+          variant: "destructive",
+          duration: 5000,
+        });
       }
     };
 
@@ -256,10 +252,73 @@ export default function ReadinessQuestionnairePage() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [sessionId]);
+  }, [paymentIntentId, readinessCheckId]);
 
   const handleAnswerChange = (questionId: string, value: number) => {
+    console.log('handleAnswerChange called:', { questionId, value, type: typeof value });
     setAnswers(prev => ({ ...prev, [questionId]: value }));
+  };
+
+  const sendToGoogleSheets = async (assessmentData: any, answers: Record<string, number>) => {
+    try {
+      // Map questionnaire answers to form fields
+      const formData = new FormData();
+      
+      // Basic company info (you can modify these based on your needs)
+      formData.append('Company', 'AI Risk Assessment Client');
+      formData.append('Industry', 'Technology');
+      formData.append('UseCases', 'AI Compliance Assessment');
+      formData.append('DataCategories', 'Assessment Data');
+      
+      // Map questionnaire answers to form fields
+      formData.append('PHI', answers.sensitive_data === 3 ? 'Yes' : 'No');
+      formData.append('EUUsers', answers.data_geography === 3 ? 'Yes' : 'No');
+      formData.append('Vendors', getVendorType(answers.providers));
+      formData.append('ModelType', 'AI Assessment Tool');
+      
+      // Map control answers
+      formData.append('Controls_MFA', answers.access_controls <= 1 ? 'Yes' : 'No');
+      formData.append('Controls_RBAC', answers.access_controls <= 1 ? 'Yes' : 'No');
+      formData.append('Controls_Encryption', answers.protection_logs <= 1 ? 'Yes' : 'No');
+      formData.append('Controls_Logging', answers.protection_logs <= 1 ? 'Yes' : 'No');
+      
+      // Map oversight level
+      formData.append('OversightLevel', getOversightLevel(answers.human_in_loop));
+      formData.append('Links', 'Assessment completed via AI Risk Assessment Tool');
+      
+      // Add client info
+      formData.append('ClientName', assessmentData.clientName || 'Client');
+      formData.append('ClientEmail', assessmentData.clientEmail || '');
+      
+      // Send to Google Apps Script
+      const response = await fetch('https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      });
+      
+      console.log('✅ Data sent to Google Sheets');
+    } catch (error) {
+      console.error('❌ Error sending to Google Sheets:', error);
+      // Don't throw error - let the user know it was submitted but sheets failed
+      alert('Assessment completed, but there was an issue saving to our records. Please contact support.');
+    }
+  };
+
+  const getVendorType = (providerValue: number) => {
+    if (providerValue === 1) return 'OpenAI via Azure';
+    if (providerValue === 1.1) return 'Other US-based';
+    if (providerValue === 2) return 'Open Source';
+    if (providerValue === 2.1) return 'Multiple providers';
+    return 'Unknown';
+  };
+
+  const getOversightLevel = (oversightValue: number) => {
+    if (oversightValue === 0) return 'Pre-deployment';
+    if (oversightValue === 0.1) return 'Real-time';
+    if (oversightValue === 2) return 'Post-hoc';
+    if (oversightValue === 3) return 'None';
+    return 'Unknown';
   };
 
   const getProgress = () => {
@@ -278,7 +337,8 @@ export default function ReadinessQuestionnairePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          stripeSessionId: sessionId,
+          paymentIntentId: paymentIntentId,
+          readinessCheckId: readinessCheckId,
           answers: answers
         }),
       });
@@ -289,17 +349,9 @@ export default function ReadinessQuestionnairePage() {
 
       const assessmentData = await assessmentResponse.json();
       
-      // Generate PDF directly in the browser
-      console.log('📄 Generating PDF report...');
-      const reportData = formatReportData(
-        assessmentData.result,
-        assessmentData.clientName || 'Client'
-      );
-      
-      await generateClientPDF(
-        reportData,
-        `Client_ReadinessCheck_${new Date().toISOString().split('T')[0]}.pdf`
-      );
+      // Send data to Google Sheets instead of generating PDF
+      console.log('📊 Sending data to Google Sheets...');
+      await sendToGoogleSheets(assessmentData, answers);
       
       setSubmitted(true);
     } catch (error) {
@@ -341,8 +393,7 @@ export default function ReadinessQuestionnairePage() {
   //   );
   // }
 
-  // Keep webhook processing and pending states for other use cases
-  if (paymentStatus === 'webhook_processing') {
+  if (paymentStatus === 'loading') {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
@@ -352,43 +403,15 @@ export default function ReadinessQuestionnairePage() {
               <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-gray-900">Payment Completed!</h1>
-              <p className="text-lg text-gray-700">Processing your payment via secure webhook...</p>
-              <p className="text-sm text-gray-500">This usually takes just a few seconds</p>
-              {retryCount > 0 && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
-                    <span>Attempt {retryCount} of 15</span>
-                    <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                        style={{ width: `${(retryCount / 15) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <h1 className="text-3xl font-bold text-gray-900">Verifying Payment</h1>
+              <p className="text-lg text-gray-700">Please wait while we verify your payment...</p>
+              <p className="text-sm text-gray-500">This usually takes just a moment</p>
             </div>
             <div className="flex items-center justify-center space-x-2 text-blue-600">
               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (paymentStatus === 'pending') {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
-            <h1 className="text-2xl font-bold text-gray-900">Payment Processing</h1>
-            <p className="text-lg text-gray-700">Your payment is being processed. Please wait a moment...</p>
-            <p className="text-sm text-gray-500">This page will automatically refresh when payment is confirmed.</p>
           </div>
         </div>
       </Layout>
@@ -641,7 +664,12 @@ export default function ReadinessQuestionnairePage() {
                     
                     <RadioGroup
                       value={answers[question.id]?.toString() || ''}
-                      onValueChange={(value) => handleAnswerChange(question.id, parseInt(value))}
+                      onValueChange={(value) => {
+                        console.log('Selected value:', value, 'for question:', question.id);
+                        const numericValue = parseFloat(value);
+                        console.log('Parsed numeric value:', numericValue);
+                        handleAnswerChange(question.id, numericValue);
+                      }}
                       className="grid grid-cols-1 gap-4"
                     >
                       {question.options.map((option) => (

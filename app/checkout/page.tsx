@@ -1,34 +1,182 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, CreditCard, Shield, ArrowRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CheckCircle, CreditCard, Shield, ArrowRight, Loader2 } from 'lucide-react';
 import { animations } from '@/lib/animations';
+import { loadStripe } from '@stripe/stripe-js';
+import { STRIPE_PUBLISHABLE_KEY } from '@/lib/stripe';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [stripe, setStripe] = useState<any>(null);
+  const [elements, setElements] = useState<any>(null);
+  const [cardElement, setCardElement] = useState<any>(null);
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initializeStripe = async () => {
+      if (!STRIPE_PUBLISHABLE_KEY) {
+        console.error('Stripe publishable key not found');
+        return;
+      }
+
+      const stripeInstance = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+      setStripe(stripeInstance);
+
+      if (stripeInstance) {
+        const elementsInstance = stripeInstance.elements();
+        setElements(elementsInstance);
+
+        const cardElementInstance = elementsInstance.create('card', {
+          style: {
+            base: {
+              fontSize: '16px',
+              color: '#374151',
+              fontFamily: 'system-ui, sans-serif',
+              '::placeholder': {
+                color: '#9CA3AF',
+              },
+            },
+            invalid: {
+              color: '#EF4444',
+            },
+          },
+        });
+
+        // Wait for the DOM element to be available
+        const cardElementDiv = document.getElementById('card-element');
+        if (cardElementDiv) {
+          cardElementInstance.mount('#card-element');
+          setCardElement(cardElementInstance);
+        } else {
+          console.error('Card element div not found');
+        }
+
+        cardElementInstance.on('change', (event: any) => {
+          if (event.error) {
+            setPaymentError(event.error.message);
+          } else {
+            setPaymentError(null);
+          }
+        });
+      }
+    };
+
+    initializeStripe();
+  }, []);
 
   const handleProceedToPayment = async () => {
+    if (!stripe || !cardElement) {
+      alert('Stripe is not loaded. Please refresh the page.');
+      return;
+    }
+
     setIsLoading(true);
+    setPaymentError(null);
+
     try {
-      const response = await fetch('/api/checkout/session', {
+      // Create payment method
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: {
+          email: clientEmail,
+          name: clientName,
+        },
+      });
+
+      if (pmError) {
+        setPaymentError(pmError.message);
+        toast({
+          title: "Payment Method Error",
+          description: pmError.message,
+          variant: "destructive",
+          duration: 5000,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Create and confirm payment intent
+      const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          clientEmail,
+          clientName,
+        }),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        throw new Error(result.error || 'Payment failed');
       }
 
-      const { url } = await response.json();
-      window.location.href = url;
+      if (result.status === 'succeeded') {
+        // Payment succeeded, show success toast and redirect
+        toast({
+          title: "Payment Successful!",
+          description: "Your payment has been processed successfully. Redirecting to assessment...",
+          duration: 3000,
+        });
+        // Small delay to show toast before redirect
+        setTimeout(() => {
+          window.location.href = `/questionnaire/readiness?payment_intent=${result.paymentIntentId}&readiness_check=${result.readinessCheckId}`;
+        }, 1000);
+      } else if (result.status === 'requires_action') {
+        // Handle 3D Secure authentication
+        const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
+        
+        if (confirmError) {
+          setPaymentError(confirmError.message);
+          toast({
+            title: "Payment Failed",
+            description: confirmError.message,
+            variant: "destructive",
+            duration: 5000,
+          });
+        } else {
+          // Payment succeeded after 3D Secure
+          toast({
+            title: "Payment Successful!",
+            description: "Your payment has been processed successfully. Redirecting to assessment...",
+            duration: 3000,
+          });
+          setTimeout(() => {
+            window.location.href = `/questionnaire/readiness?payment_intent=${result.paymentIntentId}&readiness_check=${result.readinessCheckId}`;
+          }, 1000);
+        }
+      } else {
+        setPaymentError('Payment failed. Please try again.');
+        toast({
+          title: "Payment Failed",
+          description: 'Payment failed. Please try again.',
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
     } catch (error) {
-      console.error('Error creating checkout session:', error);
-      alert('Failed to proceed to payment. Please try again.');
+      console.error('Error processing payment:', error);
+      setPaymentError('Failed to process payment. Please try again.');
+      toast({
+        title: "Payment Error",
+        description: 'Failed to process payment. Please try again.',
+        variant: "destructive",
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +197,7 @@ export default function CheckoutPage() {
               </p>
             </div>
 
-            {/* Payment Card */}
+            {/* Payment Form Card */}
             <Card className={`border-2 border-blue-200 shadow-lg ${animations.card.hover}`}>
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-gray-900">
@@ -61,27 +209,51 @@ export default function CheckoutPage() {
               </CardHeader>
               
               <CardContent className="space-y-6">
-                {/* What's Included */}
+                {/* Customer Information */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">What's Included:</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Comprehensive AI risk heatmap</span>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Prioritized 30-day action plan</span>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Client-ready PDF report</span>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">EU AI Act + US Healthcare compliance focus</span>
-                    </li>
-                  </ul>
+                  <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="client-name">Full Name</Label>
+                      <Input
+                        id="client-name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="client-email">Email Address</Label>
+                      <Input
+                        id="client-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={clientEmail}
+                        onChange={(e) => setClientEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Form */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="card-element">Card Details</Label>
+                    <div 
+                      id="card-element"
+                      className="p-4 border-2 border-gray-300 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200"
+                      style={{ minHeight: '48px' }}
+                    />
+                    {paymentError && (
+                      <div className="text-red-600 text-sm mt-2">
+                        {paymentError}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Security Badge */}
@@ -95,28 +267,51 @@ export default function CheckoutPage() {
                 {/* Payment Button */}
                 <Button
                   onClick={handleProceedToPayment}
-                  disabled={isLoading}
+                  disabled={isLoading || !clientName || !clientEmail || !stripe}
                   size="lg"
                   className={`w-full text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg group ${animations.button.primary}`}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Processing...</span>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Processing Payment...</span>
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
                       <CreditCard className="h-5 w-5" />
-                      <span>Proceed to Payment</span>
+                      <span>Complete Payment - $200</span>
                       <ArrowRight className="h-5 w-5" />
                     </div>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
 
-                {/* Trust Indicators */}
-                <div className="text-center text-sm text-gray-500">
-                  <p>🔒 Your payment information is secure and encrypted</p>
-                  <p>✅ 30-day money-back guarantee</p>
+            {/* What's Included Card */}
+            <Card className={`border-2 border-green-200 shadow-lg mt-6 ${animations.card.hover}`}>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-gray-900 text-center">
+                  What's Included
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <span className="text-blue-600 font-semibold">•</span>
+                    <span className="text-gray-700">Comprehensive AI risk heatmap</span>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="text-blue-600 font-semibold">•</span>
+                    <span className="text-gray-700">Prioritized 30-day action plan</span>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="text-blue-600 font-semibold">•</span>
+                    <span className="text-gray-700">Client-ready PDF report</span>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="text-blue-600 font-semibold">•</span>
+                    <span className="text-gray-700">EU AI Act + US Healthcare compliance focus</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>

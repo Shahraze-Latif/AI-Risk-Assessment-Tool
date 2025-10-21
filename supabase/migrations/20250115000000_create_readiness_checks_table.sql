@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS readiness_checks (
   updated_at timestamptz DEFAULT now(),
   status text DEFAULT 'pending' CHECK (status IN ('pending', 'payment_pending', 'paid', 'cancelled', 'processing', 'completed')),
   stripe_session_id text,
+  stripe_payment_intent_id text,
   client_email text,
   client_name text,
   assessment_data jsonb,
@@ -59,6 +60,7 @@ CREATE POLICY "Anyone can update readiness_checks"
 CREATE INDEX IF NOT EXISTS idx_readiness_checks_created_at ON readiness_checks(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_readiness_checks_status ON readiness_checks(status);
 CREATE INDEX IF NOT EXISTS idx_readiness_checks_stripe_session_id ON readiness_checks(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_readiness_checks_stripe_payment_intent_id ON readiness_checks(stripe_payment_intent_id);
 
 -- Add updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
