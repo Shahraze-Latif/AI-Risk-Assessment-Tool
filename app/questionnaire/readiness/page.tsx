@@ -8,7 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText, ChevronRight } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, Shield, Database, Users, Eye, FileText, ChevronRight, CreditCard, ArrowRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { loadStripe } from '@stripe/stripe-js';
+import { STRIPE_PUBLISHABLE_KEY } from '@/lib/stripe';
 import { animations } from '@/lib/animations';
 // PDF generation removed - now using Google Sheets
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -195,64 +199,86 @@ export default function ReadinessQuestionnairePage() {
   const [currentCategory, setCurrentCategory] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  
+  // New form fields
+  const [company, setCompany] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [useCases, setUseCases] = useState('');
+  const [dataCategories, setDataCategories] = useState('');
+  const [modelType, setModelType] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  
+  // Step-based flow
+  const [currentStep, setCurrentStep] = useState<'company' | 'questions' | 'payment' | 'success'>('company');
+  
+  // Stripe payment state
+  const [stripe, setStripe] = useState<any>(null);
+  const [elements, setElements] = useState<any>(null);
+  const [cardElement, setCardElement] = useState<any>(null);
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
   useEffect(() => {
-    if (!paymentIntentId || !readinessCheckId) {
-      setError('Payment information missing. Please complete the payment process.');
-      setPaymentStatus('failed');
-      return;
-    }
+    // Start with company information step
+    setPaymentStatus('verified');
+  }, []);
 
-    // Verify payment status
-    const verifyPayment = async () => {
-      try {
-        console.log('🔍 Verifying payment for intent:', paymentIntentId);
-        const response = await fetch(`/api/verify-payment?payment_intent=${paymentIntentId}&readiness_check=${readinessCheckId}`);
-        
-        if (response.ok) {
-          console.log('✅ Payment verified successfully');
-          // Show success toast immediately
-          toast({
-            title: "Payment Successful!",
-            description: "Your payment has been verified. You can now proceed with the assessment.",
-            duration: 3000,
+  // Initialize Stripe when payment step is reached
+  useEffect(() => {
+    if (currentStep === 'payment' && !stripe) {
+      const initializeStripe = async () => {
+        if (!STRIPE_PUBLISHABLE_KEY) {
+          console.error('Stripe publishable key not found');
+          return;
+        }
+
+        const stripeInstance = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+        setStripe(stripeInstance);
+
+        if (stripeInstance) {
+          const elementsInstance = stripeInstance.elements();
+          setElements(elementsInstance);
+
+          const cardElementInstance = elementsInstance.create('card', {
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#374151',
+                fontFamily: 'system-ui, sans-serif',
+                '::placeholder': {
+                  color: '#9CA3AF',
+                },
+              },
+              invalid: {
+                color: '#EF4444',
+              },
+            },
           });
-          // Set verified status after toast
-          setPaymentStatus('verified');
-        } else {
-          const errorData = await response.json();
-          console.error('❌ Payment verification failed:', errorData);
-          setError(errorData.error || 'Payment verification failed');
-          setPaymentStatus('failed');
-          // Show error toast
-          toast({
-            title: "Payment Verification Failed",
-            description: errorData.error || 'We could not verify your payment. Please contact support.',
-            variant: "destructive",
-            duration: 5000,
+
+          // Wait for the DOM element to be available
+          const cardElementDiv = document.getElementById('card-element');
+          if (cardElementDiv) {
+            cardElementInstance.mount('#card-element');
+            setCardElement(cardElementInstance);
+          } else {
+            console.error('Card element div not found');
+          }
+
+          cardElementInstance.on('change', (event: any) => {
+            if (event.error) {
+              setPaymentError(event.error.message);
+            } else {
+              setPaymentError(null);
+            }
           });
         }
-      } catch (err) {
-        console.error('❌ Error verifying payment:', err);
-        setError('Failed to verify payment');
-        setPaymentStatus('failed');
-        // Show error toast
-        toast({
-          title: "Payment Verification Error",
-          description: 'Failed to verify payment. Please contact support.',
-          variant: "destructive",
-          duration: 5000,
-        });
-      }
-    };
+      };
 
-    // Add a small delay to prevent flash of free questionnaire
-    const timeoutId = setTimeout(() => {
-      verifyPayment();
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [paymentIntentId, readinessCheckId]);
+      initializeStripe();
+    }
+  }, [currentStep, stripe]);
 
   const handleAnswerChange = (questionId: string, value: number) => {
     console.log('handleAnswerChange called:', { questionId, value, type: typeof value });
@@ -264,17 +290,17 @@ export default function ReadinessQuestionnairePage() {
       // Map questionnaire answers to form fields
       const formData = new FormData();
       
-      // Basic company info (you can modify these based on your needs)
-      formData.append('Company', 'AI Risk Assessment Client');
-      formData.append('Industry', 'Technology');
-      formData.append('UseCases', 'AI Compliance Assessment');
-      formData.append('DataCategories', 'Assessment Data');
+      // Use new form fields
+      formData.append('Company', company || 'AI Risk Assessment Client');
+      formData.append('Industry', industry || 'Technology');
+      formData.append('UseCases', useCases || 'AI Compliance Assessment');
+      formData.append('DataCategories', dataCategories || 'Assessment Data');
+      formData.append('ModelType', modelType || 'AI Assessment Tool');
       
       // Map questionnaire answers to form fields
       formData.append('PHI', answers.sensitive_data === 3 ? 'Yes' : 'No');
       formData.append('EUUsers', answers.data_geography === 3 ? 'Yes' : 'No');
       formData.append('Vendors', getVendorType(answers.providers));
-      formData.append('ModelType', 'AI Assessment Tool');
       
       // Map control answers
       formData.append('Controls_MFA', answers.access_controls <= 1 ? 'Yes' : 'No');
@@ -298,10 +324,16 @@ export default function ReadinessQuestionnairePage() {
       });
       
       console.log('✅ Data sent to Google Sheets');
+      
+      // Generate a unique submission ID for this assessment
+      const submissionId = `assessment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      return submissionId;
     } catch (error) {
       console.error('❌ Error sending to Google Sheets:', error);
       // Don't throw error - let the user know it was submitted but sheets failed
       alert('Assessment completed, but there was an issue saving to our records. Please contact support.');
+      // Return a fallback submission ID
+      return `assessment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
   };
 
@@ -327,36 +359,39 @@ export default function ReadinessQuestionnairePage() {
     return (answeredQuestions / totalQuestions) * 100;
   };
 
-  const handleSubmit = async () => {
+  const handleCompanySubmit = () => {
+    if (isFormComplete()) {
+      setCurrentStep('questions');
+    } else {
+      toast({
+        title: "Incomplete Information",
+        description: 'Please fill in all company information fields.',
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleQuestionsSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // First, submit the assessment
-      const assessmentResponse = await fetch('/api/readiness-check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentIntentId: paymentIntentId,
-          readinessCheckId: readinessCheckId,
-          answers: answers
-        }),
-      });
-
-      if (!assessmentResponse.ok) {
-        throw new Error('Failed to submit assessment');
-      }
-
-      const assessmentData = await assessmentResponse.json();
-      
-      // Send data to Google Sheets instead of generating PDF
+      // Send data to Google Sheets first
       console.log('📊 Sending data to Google Sheets...');
-      await sendToGoogleSheets(assessmentData, answers);
+      const submissionId = await sendToGoogleSheets({}, answers);
       
-      setSubmitted(true);
+      // Store submission ID for later use in email trigger
+      sessionStorage.setItem('assessmentSubmissionId', submissionId);
+      
+      // Move to payment step
+      setCurrentStep('payment');
     } catch (error) {
       console.error('Error submitting assessment:', error);
-      alert('Failed to submit assessment. Please try again.');
+      toast({
+        title: "Submission Error",
+        description: 'Failed to submit assessment. Please try again.',
+        variant: "destructive",
+        duration: 5000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -365,6 +400,150 @@ export default function ReadinessQuestionnairePage() {
   const isAllAnswered = () => {
     const totalQuestions = categories.reduce((acc, cat) => acc + cat.questions.length, 0);
     return Object.keys(answers).length === totalQuestions;
+  };
+
+  const isFormComplete = () => {
+    return company && industry && useCases && dataCategories && modelType;
+  };
+
+  const handlePayment = async () => {
+    if (!stripe || !cardElement) {
+      toast({
+        title: "Payment Error",
+        description: 'Stripe is not loaded. Please refresh the page.',
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+
+    setIsPaymentLoading(true);
+    setPaymentError(null);
+
+    try {
+      // Create payment method
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: {
+          email: clientEmail,
+          name: clientName,
+        },
+      });
+
+      if (pmError) {
+        setPaymentError(pmError.message);
+        toast({
+          title: "Payment Method Error",
+          description: pmError.message,
+          variant: "destructive",
+          duration: 5000,
+        });
+        setIsPaymentLoading(false);
+        return;
+      }
+
+      // Create and confirm payment intent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          clientEmail,
+          clientName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Payment failed');
+      }
+
+      if (result.status === 'succeeded') {
+        // Payment succeeded
+        toast({
+          title: "Payment Successful!",
+          description: "Your payment has been processed successfully. Your report will be sent to your email shortly.",
+          duration: 5000,
+        });
+        
+        // Trigger email via Apps Script Web App
+        try {
+          const url =
+            'https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec' +
+            '?action=sendReportEmail' +
+            `&clientEmail=${encodeURIComponent(clientEmail)}` +
+            `&clientName=${encodeURIComponent(clientName)}`;
+
+          const res = await fetch(url);         // simple GET
+          const text = await res.text();
+          console.log('✅ Email trigger response:', text);
+        } catch (error) {
+          console.error('❌ Error triggering email:', error);
+        }
+        
+        setCurrentStep('success');
+      } else if (result.status === 'requires_action') {
+        // Handle 3D Secure authentication
+        const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
+        
+        if (confirmError) {
+          setPaymentError(confirmError.message);
+          toast({
+            title: "Payment Failed",
+            description: confirmError.message,
+            variant: "destructive",
+            duration: 5000,
+          });
+        } else {
+          // Payment succeeded after 3D Secure
+          toast({
+            title: "Payment Successful!",
+            description: "Your payment has been processed successfully. Your report will be sent to your email shortly.",
+            duration: 5000,
+          });
+          
+          // Trigger email via Apps Script Web App
+          try {
+            const url =
+              'https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec' +
+              '?action=sendReportEmail' +
+              `&clientEmail=${encodeURIComponent(clientEmail)}` +
+              `&clientName=${encodeURIComponent(clientName)}`;
+
+            const res = await fetch(url);         // simple GET
+            const text = await res.text();
+            console.log('✅ Email trigger response:', text);
+          } catch (error) {
+            console.error('❌ Error triggering email:', error);
+          }
+        
+        setCurrentStep('success');
+        }
+      } else {
+        setPaymentError('Payment failed. Please try again.');
+        toast({
+          title: "Payment Failed",
+          description: 'Payment failed. Please try again.',
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      setPaymentError('Failed to process payment. Please try again.');
+      toast({
+        title: "Payment Error",
+        description: 'Failed to process payment. Please try again.',
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsPaymentLoading(false);
+    }
   };
 
   // Only show loading for initial verification, not for successful payment
@@ -574,183 +753,516 @@ export default function ReadinessQuestionnairePage() {
 
   const currentCategoryData = categories[currentCategory];
 
-  return (
-    <Layout>
-      <style jsx global>{`
-        input[type="radio"]:checked {
-          background-color: #2563eb !important;
-          border-color: #2563eb !important;
-        }
-        input[type="radio"]:checked::before {
-          background-color: white !important;
-        }
-        input[type="radio"]:checked::after {
-          background-color: white !important;
-        }
-        .radio-blue:checked {
-          background-color: #2563eb !important;
-          border-color: #2563eb !important;
-        }
-      `}</style>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
-          <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="text-center space-y-6 mb-8">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-                AI Compliance Readiness Check
-              </h1>
-              <p className="text-lg text-gray-700">
-                Complete the assessment to receive your personalized risk analysis and 30-day action plan.
-              </p>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Progress</span>
-                <span className="text-sm text-gray-500">{Math.round(getProgress())}%</span>
+  // Step 1: Company Information
+  if (currentStep === 'company') {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
+            <div className="max-w-2xl mx-auto">
+              {/* Header */}
+              <div className="text-center space-y-6 mb-8">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  AI Compliance Readiness Check
+                </h1>
+                <p className="text-lg text-gray-700">
+                  Step 1: Tell us about your company to personalize your assessment.
+                </p>
               </div>
-              <Progress value={getProgress()} className="h-2" />
-            </div>
 
-                {/* Category Navigation */}
-                <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-                  <TooltipProvider>
-                    {categories.map((category, index) => (
-                      <Tooltip key={category.id}>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={currentCategory === index ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentCategory(index)}
-                            className={`
-                              flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 flex-1 min-w-0
-                              ${currentCategory === index 
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
-                                : 'bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400'
-                              }
-                            `}
-                          >
-                            {category.icon}
-                            <span className="truncate">{category.name}</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{category.name}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </TooltipProvider>
-                </div>
-
-            {/* Current Category Questions */}
-            <Card className={`border-2 shadow-lg ${animations.card.hover}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-3">
-                  {currentCategoryData.icon}
-                  <span>{currentCategoryData.name}</span>
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="space-y-8">
-                {currentCategoryData.questions.map((question, questionIndex) => (
-                  <div key={question.id} className="space-y-4">
+              {/* Company Information Form */}
+              <Card className={`border-2 border-blue-200 shadow-lg ${animations.card.hover}`}>
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-gray-900">
+                    Company Information
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Please provide your company details to personalize your assessment.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-base font-medium">
-                        {questionIndex + 1}. {question.text}
-                      </Label>
+                      <Label htmlFor="company">Company Name *</Label>
+                      <Input
+                        id="company"
+                        type="text"
+                        placeholder="Enter your company name"
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        required
+                      />
                     </div>
-                    
-                    <RadioGroup
-                      value={answers[question.id]?.toString() || ''}
-                      onValueChange={(value) => {
-                        console.log('Selected value:', value, 'for question:', question.id);
-                        const numericValue = parseFloat(value);
-                        console.log('Parsed numeric value:', numericValue);
-                        handleAnswerChange(question.id, numericValue);
-                      }}
-                      className="grid grid-cols-1 gap-4"
-                    >
-                      {question.options.map((option) => (
-                        <div key={option.value} className="relative">
-                          <RadioGroupItem 
-                            value={option.value.toString()} 
-                            id={`${question.id}-${option.value}`}
-                            className="absolute left-3 top-1/2 transform -translate-y-1/2 radio-blue"
-                          />
-                          <Label 
-                            htmlFor={`${question.id}-${option.value}`} 
-                            className={`
-                              block w-full p-3 pl-10 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md
-                              ${answers[question.id] === option.value 
-                                ? 'border-blue-500 bg-blue-50 shadow-md ring-1 ring-blue-200' 
-                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
-                              }
-                            `}
-                          >
-                            <div className="text-left space-y-1">
-                              <div className="font-medium text-sm text-gray-900">{option.label}</div>
-                              <div className="text-xs text-gray-600 leading-relaxed">{option.description}</div>
-                            </div>
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
+                    <div className="space-y-2">
+                      <Label htmlFor="industry">Industry *</Label>
+                      <Input
+                        id="industry"
+                        type="text"
+                        placeholder="e.g., Healthcare, Finance, Technology"
+                        value={industry}
+                        onChange={(e) => setIndustry(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="useCases">AI Use Cases *</Label>
+                    <Textarea
+                      id="useCases"
+                      placeholder="Describe your AI use cases and applications..."
+                      value={useCases}
+                      onChange={(e) => setUseCases(e.target.value)}
+                      className="min-h-[100px]"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="dataCategories">Data Categories *</Label>
+                    <Textarea
+                      id="dataCategories"
+                      placeholder="Describe the types of data you process (PII, PHI, financial, etc.)..."
+                      value={dataCategories}
+                      onChange={(e) => setDataCategories(e.target.value)}
+                      className="min-h-[100px]"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="modelType">AI Model Type *</Label>
+                    <Input
+                      id="modelType"
+                      type="text"
+                      placeholder="e.g., LLM, Computer Vision, NLP, Custom Models"
+                      value={modelType}
+                      onChange={(e) => setModelType(e.target.value)}
+                      required
+                    />
+                  </div>
 
-            {/* Navigation and Submit */}
-            <div className="flex justify-between items-center mt-8">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentCategory(Math.max(0, currentCategory - 1))}
-                disabled={currentCategory === 0}
-              >
-                Previous
-              </Button>
-              
-              <div className="flex space-x-4">
-                {currentCategory < categories.length - 1 ? (
                   <Button
-                    onClick={() => setCurrentCategory(currentCategory + 1)}
-                    disabled={currentCategory === categories.length - 1}
-                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
+                    onClick={handleCompanySubmit}
+                    disabled={!isFormComplete()}
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg"
                   >
-                    <span>Next</span>
-                    <ChevronRight className="h-4 w-4" />
+                    Continue to Assessment Questions
                   </Button>
-                ) : (
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Step 2: Assessment Questions
+  if (currentStep === 'questions') {
+    return (
+      <Layout>
+        <style jsx global>{`
+          input[type="radio"]:checked {
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+          }
+          input[type="radio"]:checked::before {
+            background-color: white !important;
+          }
+          input[type="radio"]:checked::after {
+            background-color: white !important;
+          }
+          .radio-blue:checked {
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+          }
+        `}</style>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
+            <div className="max-w-4xl mx-auto">
+              {/* Header */}
+              <div className="text-center space-y-6 mb-8">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  AI Compliance Readiness Check
+                </h1>
+                <p className="text-lg text-gray-700">
+                  Step 2: Complete the assessment to receive your personalized risk analysis and 30-day action plan.
+                </p>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">Assessment Progress</span>
+                  <span className="text-sm text-gray-500">{Math.round(getProgress())}%</span>
+                </div>
+                <Progress value={getProgress()} className="h-2" />
+              </div>
+
+              {/* Category Navigation */}
+              <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+                <TooltipProvider>
+                  {categories.map((category, index) => (
+                    <Tooltip key={category.id}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={currentCategory === index ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentCategory(index)}
+                          className={`
+                            flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 flex-1 min-w-0
+                            ${currentCategory === index 
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
+                              : 'bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50 hover:border-gray-400'
+                            }
+                          `}
+                        >
+                          {category.icon}
+                          <span className="truncate">{category.name}</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{category.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </TooltipProvider>
+              </div>
+
+              {/* Current Category Questions */}
+              <Card className={`border-2 shadow-lg ${animations.card.hover}`}>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-3">
+                    {currentCategoryData.icon}
+                    <span>{currentCategoryData.name}</span>
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="space-y-8">
+                  {currentCategoryData.questions.map((question, questionIndex) => (
+                    <div key={question.id} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-base font-medium">
+                          {questionIndex + 1}. {question.text}
+                        </Label>
+                      </div>
+                      
+                      <RadioGroup
+                        value={answers[question.id]?.toString() || ''}
+                        onValueChange={(value) => {
+                          console.log('Selected value:', value, 'for question:', question.id);
+                          const numericValue = parseFloat(value);
+                          console.log('Parsed numeric value:', numericValue);
+                          handleAnswerChange(question.id, numericValue);
+                        }}
+                        className="grid grid-cols-1 gap-4"
+                      >
+                        {question.options.map((option) => (
+                          <div key={option.value} className="relative">
+                            <RadioGroupItem 
+                              value={option.value.toString()} 
+                              id={`${question.id}-${option.value}`}
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 radio-blue"
+                            />
+                            <Label 
+                              htmlFor={`${question.id}-${option.value}`} 
+                              className={`
+                                block w-full p-3 pl-10 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md
+                                ${answers[question.id] === option.value 
+                                  ? 'border-blue-500 bg-blue-50 shadow-md ring-1 ring-blue-200' 
+                                  : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
+                                }
+                              `}
+                            >
+                              <div className="text-left space-y-1">
+                                <div className="font-medium text-sm text-gray-900">{option.label}</div>
+                                <div className="text-xs text-gray-600 leading-relaxed">{option.description}</div>
+                              </div>
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Navigation and Submit */}
+              <div className="flex justify-between items-center mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentCategory(Math.max(0, currentCategory - 1))}
+                  disabled={currentCategory === 0}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex space-x-4">
+                  {currentCategory < categories.length - 1 ? (
+                    <Button
+                      onClick={() => setCurrentCategory(currentCategory + 1)}
+                      disabled={currentCategory === categories.length - 1}
+                      className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleQuestionsSubmit}
+                      disabled={!isAllAnswered() || isSubmitting}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Submitting...</span>
+                        </div>
+                      ) : (
+                        'Complete Assessment & Proceed to Payment'
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Completion Status */}
+              {isAllAnswered() && (
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-green-800 font-medium">All questions answered! You can now proceed to payment.</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Form Incomplete Warning */}
+              {!isAllAnswered() && (
+                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                    <span className="text-yellow-800 font-medium">Please answer all assessment questions to proceed.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Step 3: Payment
+  if (currentStep === 'payment') {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
+            <div className="max-w-2xl mx-auto">
+              {/* Header */}
+              <div className="text-center space-y-6 mb-8">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  You're Just One Click Away! 🎉
+                </h1>
+                <p className="text-lg text-gray-700">
+                  Step 3: Your assessment has been saved successfully. Complete your payment to receive your personalized AI compliance report.
+                </p>
+                <div className="flex items-center justify-center space-x-2 text-3xl font-bold text-green-600 mt-4">
+                  <span>$200</span>
+                </div>
+              </div>
+
+              {/* Payment Form */}
+              <Card className={`border-2 border-green-200 shadow-lg ${animations.card.hover}`}>
+                <CardContent className="space-y-6">
+                  {/* Customer Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="client-name">Full Name *</Label>
+                        <Input
+                          id="client-name"
+                          type="text"
+                          placeholder="Enter your full name"
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="client-email">Email Address *</Label>
+                        <Input
+                          id="client-email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={clientEmail}
+                          onChange={(e) => setClientEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Form */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="card-element">Card Details</Label>
+                      <div 
+                        id="card-element"
+                        className="p-4 border-2 border-gray-300 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200"
+                        style={{ minHeight: '48px' }}
+                      />
+                      {paymentError && (
+                        <div className="text-red-600 text-sm mt-2">
+                          {paymentError}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Security Badge */}
+                  <div className="flex items-center justify-center space-x-2 bg-green-50 border border-green-200 rounded-lg p-3">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">
+                      Secure payment powered by Stripe
+                    </span>
+                  </div>
+
+                  {/* Payment Button */}
                   <Button
-                    onClick={handleSubmit}
-                    disabled={!isAllAnswered() || isSubmitting}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    onClick={handlePayment}
+                    disabled={isPaymentLoading || !clientName || !clientEmail || !stripe}
+                    size="lg"
+                    className={`w-full text-lg px-8 py-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg group ${animations.button.primary}`}
                   >
-                    {isSubmitting ? (
+                    {isPaymentLoading ? (
                       <div className="flex items-center space-x-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Submitting...</span>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Processing Payment...</span>
                       </div>
                     ) : (
-                      'Submit Assessment'
+                      <div className="flex items-center space-x-2">
+                        <CreditCard className="h-5 w-5" />
+                        <span>Complete Payment - $200</span>
+                        <ArrowRight className="h-5 w-5" />
+                      </div>
                     )}
                   </Button>
-                )}
+
+                  <div className="text-center text-sm text-gray-500">
+                    <p>🔒 Your payment information is secure and encrypted</p>
+                    <p>📧 Your personalized report will be sent to your email immediately after payment</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Step 4: Success
+  if (currentStep === 'success') {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-9 sm:pt-13 lg:pt-17 pb-12 sm:pb-16 lg:pb-20">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center space-y-6 mb-8">
+                <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  Assessment Complete!
+                </h1>
+                <p className="text-lg text-gray-700">
+                  Your AI Compliance Readiness Check has been successfully completed and your personalized report has been generated.
+                </p>
+              </div>
+
+              {/* What Happens Next Section */}
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <Card className={`border-2 border-blue-200 shadow-lg ${animations.card.hover}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      <span>Your Report is Ready</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">PDF report has been sent to your email</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Comprehensive risk assessment with detailed findings</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">30-day action plan with prioritized tasks</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`border-2 border-green-200 shadow-lg ${animations.card.hover}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Shield className="h-5 w-5 text-green-600" />
+                      <span>Next Steps</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Review your risk heatmap and identify priority areas</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Implement the 30-day action plan recommendations</p>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                        <p className="text-sm text-gray-700">Address high-risk areas immediately for compliance</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="text-center space-y-4">
+                <Button
+                  size="lg"
+                  className={`text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg ${animations.button.primary}`}
+                  onClick={() => window.location.href = '/'}
+                >
+                  Return to Home
+                </Button>
+                <p className="text-sm text-gray-500">
+                  Need help with your assessment? Contact our compliance experts for guidance.
+                </p>
               </div>
             </div>
-
-            {/* Completion Status */}
-            {isAllAnswered() && (
-              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-green-800 font-medium">All questions answered! You can now submit your assessment.</span>
-                </div>
-              </div>
-            )}
           </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Default fallback
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
+          <h1 className="text-3xl font-bold text-gray-900">Loading...</h1>
         </div>
       </div>
     </Layout>
