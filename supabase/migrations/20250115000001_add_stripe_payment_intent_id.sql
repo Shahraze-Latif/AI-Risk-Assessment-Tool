@@ -17,3 +17,4 @@ ON readiness_checks(stripe_payment_intent_id);
 COMMENT ON COLUMN readiness_checks.stripe_payment_intent_id IS 'Stripe payment intent ID for direct payment flow';
 
 
+

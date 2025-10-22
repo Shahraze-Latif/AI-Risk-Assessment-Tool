@@ -317,11 +317,31 @@ export default function ReadinessQuestionnairePage() {
       formData.append('ClientEmail', assessmentData.clientEmail || '');
       
       // Send to Google Apps Script
-      const response = await fetch('https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec', {
+      const payload = new URLSearchParams();
+      payload.append('Company', company || 'AI Risk Assessment Client');
+      payload.append('Industry', industry || 'Technology');
+      payload.append('UseCases', useCases || 'AI Compliance Assessment');
+      payload.append('DataCategories', dataCategories || 'Assessment Data');
+      payload.append('ModelType', modelType || 'AI Assessment Tool');
+      payload.append('PHI', answers.sensitive_data === 3 ? 'Yes' : 'No');
+      payload.append('EUUsers', answers.data_geography === 3 ? 'Yes' : 'No');
+      payload.append('Vendors', getVendorType(answers.providers));
+      payload.append('Controls_MFA', answers.access_controls <= 1 ? 'Yes' : 'No');
+      payload.append('Controls_RBAC', answers.access_controls <= 1 ? 'Yes' : 'No');
+      payload.append('Controls_Encryption', answers.protection_logs <= 1 ? 'Yes' : 'No');
+      payload.append('Controls_Logging', answers.protection_logs <= 1 ? 'Yes' : 'No');
+      payload.append('OversightLevel', getOversightLevel(answers.human_in_loop)); // ✅ critical
+      payload.append('Links', 'Assessment completed via AI Risk Assessment Tool');
+      payload.append('ClientName', assessmentData.clientName || 'Client');
+      payload.append('ClientEmail', assessmentData.clientEmail || '');
+      
+      await fetch('https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec', {
         method: 'POST',
         mode: 'no-cors',
-        body: formData
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload
       });
+      
       
       console.log('✅ Data sent to Google Sheets');
       
@@ -572,30 +592,30 @@ export default function ReadinessQuestionnairePage() {
   //   );
   // }
 
-  if (paymentStatus === 'loading') {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-          <div className="text-center space-y-6">
-            <div className="relative">
-              <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
-              <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-gray-900">Verifying Payment</h1>
-              <p className="text-lg text-gray-700">Please wait while we verify your payment...</p>
-              <p className="text-sm text-gray-500">This usually takes just a moment</p>
-            </div>
-            <div className="flex items-center justify-center space-x-2 text-blue-600">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  // if (paymentStatus === 'loading') {
+  //   return (
+  //     <Layout>
+  //       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+  //         <div className="text-center space-y-6">
+  //           <div className="relative">
+  //             <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
+  //             <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
+  //           </div>
+  //           <div className="space-y-2">
+  //             <h1 className="text-3xl font-bold text-gray-900">Verifying Payment</h1>
+  //             <p className="text-lg text-gray-700">Please wait while we verify your payment...</p>
+  //             <p className="text-sm text-gray-500">This usually takes just a moment</p>
+  //           </div>
+  //           <div className="flex items-center justify-center space-x-2 text-blue-600">
+  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </Layout>
+  //   );
+  // }
 
   if (paymentStatus === 'failed') {
     return (
@@ -1079,7 +1099,7 @@ export default function ReadinessQuestionnairePage() {
                 <CardContent className="space-y-6">
                   {/* Customer Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mt-6">Your Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="client-name">Full Name *</Label>
