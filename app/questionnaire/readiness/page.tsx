@@ -206,6 +206,7 @@ export default function ReadinessQuestionnairePage() {
   const [useCases, setUseCases] = useState('');
   const [dataCategories, setDataCategories] = useState('');
   const [modelType, setModelType] = useState('');
+  const [clientName, setClientName] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   
   // Step-based flow
@@ -216,7 +217,6 @@ export default function ReadinessQuestionnairePage() {
   const [elements, setElements] = useState<any>(null);
   const [cardElement, setCardElement] = useState<any>(null);
   const [clientEmail, setClientEmail] = useState('');
-  const [clientName, setClientName] = useState('');
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
@@ -313,7 +313,7 @@ export default function ReadinessQuestionnairePage() {
       formData.append('Links', 'Assessment completed via AI Risk Assessment Tool');
       
       // Add client info
-      formData.append('ClientName', assessmentData.clientName || 'Client');
+      formData.append('ClientName', clientName || 'Client');
       formData.append('ClientEmail', assessmentData.clientEmail || '');
       
       // Send to Google Apps Script
@@ -332,10 +332,10 @@ export default function ReadinessQuestionnairePage() {
       payload.append('Controls_Logging', answers.protection_logs <= 1 ? 'Yes' : 'No');
       payload.append('OversightLevel', getOversightLevel(answers.human_in_loop)); // ✅ critical
       payload.append('Links', 'Assessment completed via AI Risk Assessment Tool');
-      payload.append('ClientName', assessmentData.clientName || 'Client');
+      payload.append('ClientName', clientName || 'Client');
       payload.append('ClientEmail', assessmentData.clientEmail || '');
       
-      await fetch('https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycby7MIwEalkFO43oup8MHTDLScg0uChpHaIlop5eZ_iZbF2HLti8a6biDBBlXC_laYc_8A/exec', {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -423,7 +423,7 @@ export default function ReadinessQuestionnairePage() {
   };
 
   const isFormComplete = () => {
-    return company && industry && useCases && dataCategories && modelType;
+    return company && industry && useCases && dataCategories && modelType && clientName;
   };
 
   const handlePayment = async () => {
@@ -436,21 +436,33 @@ export default function ReadinessQuestionnairePage() {
       });
       return;
     }
-
+  
     setIsPaymentLoading(true);
     setPaymentError(null);
-
+  
     try {
+      // 🧾 Retrieve submissionId from sessionStorage (saved after form submit)
+      const submissionId = sessionStorage.getItem('assessmentSubmissionId');
+  
+      if (!submissionId) {
+        console.error('❌ Missing submissionId — form may not have been submitted correctly.');
+        toast({
+          title: "Missing submission ID",
+          description: "We couldn’t find your submission. Please resubmit the form.",
+          variant: "destructive",
+          duration: 6000,
+        });
+        setIsPaymentLoading(false);
+        return;
+      }
+  
       // Create payment method
       const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
-        billing_details: {
-          email: clientEmail,
-          name: clientName,
-        },
+        billing_details: { email: clientEmail, name: clientName },
       });
-
+  
       if (pmError) {
         setPaymentError(pmError.message);
         toast({
@@ -462,54 +474,51 @@ export default function ReadinessQuestionnairePage() {
         setIsPaymentLoading(false);
         return;
       }
-
+  
       // Create and confirm payment intent
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentMethodId: paymentMethod.id,
           clientEmail,
           clientName,
         }),
       });
-
+  
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Payment failed');
-      }
-
-      if (result.status === 'succeeded') {
-        // Payment succeeded
-        toast({
-          title: "Payment Successful!",
-          description: "Your payment has been processed successfully. Your report will be sent to your email shortly.",
-          duration: 5000,
-        });
-        
-        // Trigger email via Apps Script Web App
+      if (!response.ok) throw new Error(result.error || 'Payment failed');
+  
+      const triggerEmail = async () => {
         try {
           const url =
-            'https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec' +
+            'https://script.google.com/macros/s/AKfycby7MIwEalkFO43oup8MHTDLScg0uChpHaIlop5eZ_iZbF2HLti8a6biDBBlXC_laYc_8A/exec' +
             '?action=sendReportEmail' +
+            `&submissionId=${encodeURIComponent(submissionId)}` + // ✅ include submissionId
             `&clientEmail=${encodeURIComponent(clientEmail)}` +
             `&clientName=${encodeURIComponent(clientName)}`;
-
-          const res = await fetch(url);         // simple GET
+  
+          const res = await fetch(url);
           const text = await res.text();
           console.log('✅ Email trigger response:', text);
         } catch (error) {
           console.error('❌ Error triggering email:', error);
         }
-        
+      };
+  
+      if (result.status === 'succeeded') {
+        toast({
+          title: "Payment Successful!",
+          description: "Your payment has been processed successfully. Your report will be sent to your email shortly.",
+          duration: 5000,
+        });
+  
+        await triggerEmail(); // ✅ Run with submissionId
         setCurrentStep('success');
       } else if (result.status === 'requires_action') {
         // Handle 3D Secure authentication
         const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
-        
+  
         if (confirmError) {
           setPaymentError(confirmError.message);
           toast({
@@ -519,29 +528,14 @@ export default function ReadinessQuestionnairePage() {
             duration: 5000,
           });
         } else {
-          // Payment succeeded after 3D Secure
           toast({
             title: "Payment Successful!",
             description: "Your payment has been processed successfully. Your report will be sent to your email shortly.",
             duration: 5000,
           });
-          
-          // Trigger email via Apps Script Web App
-          try {
-            const url =
-              'https://script.google.com/macros/s/AKfycbx0lyT5_229raRw8wifeHWCkfWmy3vzdghpiGalIjkjTbDrnubBk0XyxGCY0djfwzRBQw/exec' +
-              '?action=sendReportEmail' +
-              `&clientEmail=${encodeURIComponent(clientEmail)}` +
-              `&clientName=${encodeURIComponent(clientName)}`;
-
-            const res = await fetch(url);         // simple GET
-            const text = await res.text();
-            console.log('✅ Email trigger response:', text);
-          } catch (error) {
-            console.error('❌ Error triggering email:', error);
-          }
-        
-        setCurrentStep('success');
+  
+          await triggerEmail(); // ✅ Run with submissionId
+          setCurrentStep('success');
         }
       } else {
         setPaymentError('Payment failed. Please try again.');
@@ -565,6 +559,7 @@ export default function ReadinessQuestionnairePage() {
       setIsPaymentLoading(false);
     }
   };
+  
 
   // Only show loading for initial verification, not for successful payment
   // if (paymentStatus === 'loading') {
@@ -824,6 +819,18 @@ export default function ReadinessQuestionnairePage() {
                         required
                       />
                     </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="client-name">Your Full Name *</Label>
+                    <Input
+                      id="client-name"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      required
+                    />
                   </div>
                   
                   <div className="space-y-2">
@@ -1099,18 +1106,11 @@ export default function ReadinessQuestionnairePage() {
                 <CardContent className="space-y-6">
                   {/* Customer Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mt-6">Your Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="client-name">Full Name *</Label>
-                        <Input
-                          id="client-name"
-                          type="text"
-                          placeholder="Enter your full name"
-                          value={clientName}
-                          onChange={(e) => setClientName(e.target.value)}
-                          required
-                        />
+                    <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-sm font-medium text-blue-800">Name:</span>
+                        <span className="text-sm text-blue-700">{clientName}</span>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="client-email">Email Address *</Label>
