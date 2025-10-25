@@ -489,6 +489,7 @@ export default function ReadinessQuestionnairePage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Payment failed');
   
+
       const triggerEmail = async () => {
         try {
           const url =
@@ -559,58 +560,7 @@ export default function ReadinessQuestionnairePage() {
       setIsPaymentLoading(false);
     }
   };
-  
 
-  // Only show loading for initial verification, not for successful payment
-  // if (paymentStatus === 'loading') {
-  //   return (
-  //     <Layout>
-  //       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-  //         <div className="text-center space-y-6">
-  //           <div className="relative">
-  //             <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
-  //             <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
-  //           </div>
-  //           <div className="space-y-2">
-  //             <h1 className="text-3xl font-bold text-gray-900">Please Wait</h1>
-  //             <p className="text-lg text-gray-700">Verifying your payment and preparing your assessment...</p>
-  //             <p className="text-sm text-gray-500">Setting up your personalized AI Compliance Readiness Check</p>
-  //           </div>
-  //           <div className="flex items-center justify-center space-x-2 text-blue-600">
-  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </Layout>
-  //   );
-  // }
-
-  // if (paymentStatus === 'loading') {
-  //   return (
-  //     <Layout>
-  //       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-  //         <div className="text-center space-y-6">
-  //           <div className="relative">
-  //             <Loader2 className="h-16 w-16 text-blue-600 animate-spin mx-auto" />
-  //             <div className="absolute inset-0 h-16 w-16 border-4 border-blue-200 rounded-full animate-pulse"></div>
-  //           </div>
-  //           <div className="space-y-2">
-  //             <h1 className="text-3xl font-bold text-gray-900">Verifying Payment</h1>
-  //             <p className="text-lg text-gray-700">Please wait while we verify your payment...</p>
-  //             <p className="text-sm text-gray-500">This usually takes just a moment</p>
-  //           </div>
-  //           <div className="flex items-center justify-center space-x-2 text-blue-600">
-  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-  //             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </Layout>
-  //   );
-  // }
 
   if (paymentStatus === 'failed') {
     return (
