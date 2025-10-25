@@ -335,7 +335,7 @@ export default function ReadinessQuestionnairePage() {
       payload.append('ClientName', clientName || 'Client');
       payload.append('ClientEmail', assessmentData.clientEmail || '');
       
-      await fetch('https://script.google.com/a/macros/aiglobalinnovations.com/s/AKfycbz6qaW09_-7eJW0WyAJpBsiYd18y0KEPMg62GKAIXuxSLQdC5dL3P0OuqPBaUJMJK64sQ/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbwAGC5BGsMg04PxEE9uBPXFWwK8rAw5Z3oBvu-ahFcarZ5tOnGJ-ujmGsYjE0UOKVIxgA/exec', {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -492,7 +492,7 @@ export default function ReadinessQuestionnairePage() {
       const triggerEmail = async () => {
         try {
           const url =
-            'https://script.google.com/a/macros/aiglobalinnovations.com/s/AKfycbz6qaW09_-7eJW0WyAJpBsiYd18y0KEPMg62GKAIXuxSLQdC5dL3P0OuqPBaUJMJK64sQ/exec' +
+            'https://script.google.com/macros/s/AKfycbwAGC5BGsMg04PxEE9uBPXFWwK8rAw5Z3oBvu-ahFcarZ5tOnGJ-ujmGsYjE0UOKVIxgA/exec' +
             '?action=sendReportEmail' +
             `&submissionId=${encodeURIComponent(submissionId)}` + // ✅ include submissionId
             `&clientEmail=${encodeURIComponent(clientEmail)}` +
