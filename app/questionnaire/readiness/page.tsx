@@ -335,7 +335,7 @@ export default function ReadinessQuestionnairePage() {
       payload.append('ClientName', clientName || 'Client');
       payload.append('ClientEmail', assessmentData.clientEmail || '');
       
-      await fetch('https://script.google.com/macros/s/AKfycbzraKgu6HE_AsoTu9zQoOgNgwA04jLPJ8_s67B6UG9F0sJkDMCrGSXhsfZKrqINSpujnQ/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbwugSWL5Sh67KPMJjrGunkrm0xPSOpguijHqN6xWSrDmxoKK3yF8vdaSH3wL4gQcZLd/exec', {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -493,7 +493,7 @@ export default function ReadinessQuestionnairePage() {
       const triggerEmail = async () => {
         try {
           const url =
-            'https://script.google.com/macros/s/AKfycbzraKgu6HE_AsoTu9zQoOgNgwA04jLPJ8_s67B6UG9F0sJkDMCrGSXhsfZKrqINSpujnQ/exec' +
+            'https://script.google.com/macros/s/AKfycbwugSWL5Sh67KPMJjrGunkrm0xPSOpguijHqN6xWSrDmxoKK3yF8vdaSH3wL4gQcZLd/exec' +
             '?action=sendReportEmail' +
             `&submissionId=${encodeURIComponent(submissionId)}` + // ✅ include submissionId
             `&clientEmail=${encodeURIComponent(clientEmail)}` +
