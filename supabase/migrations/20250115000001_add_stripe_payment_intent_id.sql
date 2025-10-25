@@ -19,3 +19,4 @@ COMMENT ON COLUMN readiness_checks.stripe_payment_intent_id IS 'Stripe payment i
 
 
 
+
