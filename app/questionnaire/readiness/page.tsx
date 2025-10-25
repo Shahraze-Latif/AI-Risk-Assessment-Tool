@@ -337,7 +337,6 @@ export default function ReadinessQuestionnairePage() {
       
       await fetch('https://script.google.com/macros/s/AKfycbwAGC5BGsMg04PxEE9uBPXFWwK8rAw5Z3oBvu-ahFcarZ5tOnGJ-ujmGsYjE0UOKVIxgA/exec', {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: payload
       });
