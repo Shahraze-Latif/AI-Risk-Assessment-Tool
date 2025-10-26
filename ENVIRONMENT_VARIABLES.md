@@ -46,6 +46,13 @@ NEXT_PUBLIC_SUPABASE_SERVICE_KEY=your_supabase_service_key
 NEXT_PUBLIC_DOMAIN_URL=https://ai-risk-assessment-tool-peach.vercel.app
 ```
 
+### **5. Sample Report Configuration**
+
+```bash
+# Sample Report PDF URL
+NEXT_PUBLIC_SAMPLE_REPORT_URL=https://drive.google.com/file/d/1G8iKfc05z5VDK0RxELbReyB8l6pD9uwq/view?usp=sharing
+```
+
 ## 🔧 **Local Development Setup**
 
 ### **1. Create .env.local File**
@@ -60,6 +67,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_SERVICE_KEY=your_supabase_service_key
 NEXT_PUBLIC_DOMAIN_URL=http://localhost:3000
+NEXT_PUBLIC_SAMPLE_REPORT_URL=https://drive.google.com/file/d/1G8iKfc05z5VDK0RxELbReyB8l6pD9uwq/view?usp=sharing
 ```
 
 ### **2. Add to .gitignore**

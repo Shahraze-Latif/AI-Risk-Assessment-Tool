@@ -17,6 +17,9 @@ NEXT_PUBLIC_SUPABASE_SERVICE_KEY=your_supabase_service_key
 
 # Domain Configuration
 NEXT_PUBLIC_DOMAIN_URL=https://your-domain.com
+
+# Sample Report Configuration
+NEXT_PUBLIC_SAMPLE_REPORT_URL=https://drive.google.com/file/d/1G8iKfc05z5VDK0RxELbReyB8l6pD9uwq/view?usp=sharing
 ```
 
 ## 🔐 **Security Notes**
