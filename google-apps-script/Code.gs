@@ -91,6 +91,12 @@ function runForLatestRow() {
 function doPost(e) {
   const submissionId = Utilities.getUuid();
   const clientName = e.parameter.ClientName || e.parameter.Company || 'Unknown Client';
+  
+  // Check if this is a payment webhook request
+  if (e.parameter.timestamp && e.parameter.session_id && e.parameter.status) {
+    return handlePaymentWebhook(e.parameter);
+  }
+  
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const intake = ss.getSheetByName('Intake');
@@ -137,6 +143,93 @@ function doPost(e) {
       .createTextOutput(JSON.stringify({ status: 'error', message: err.message, submissionId }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+/* ─────────────── PAYMENT WEBHOOK HANDLER ─────────────── */
+
+function handlePaymentWebhook(paymentData) {
+  try {
+    console.log('💳 Processing payment webhook:', paymentData);
+    
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const paymentsSheet = ensurePaymentsSheet(ss);
+    
+    // Record payment data
+    appendToPayments(paymentsSheet, paymentData);
+    
+    console.log('✅ Payment webhook processed successfully');
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'success', message: 'Payment recorded' }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    console.error('❌ Payment webhook error:', error);
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'error', message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function ensurePaymentsSheet(ss) {
+  let paymentsSheet = ss.getSheetByName('Payments');
+  if (!paymentsSheet) {
+    paymentsSheet = ss.insertSheet('Payments');
+    // Add headers
+    paymentsSheet.appendRow([
+      'Timestamp',
+      'Email', 
+      'Amount',
+      'Status',
+      'Session ID',
+      'Payment Intent ID',
+      'Currency',
+      'Client Name'
+    ]);
+    
+    // Format headers
+    const headerRange = paymentsSheet.getRange(1, 1, 1, 8);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#f0f0f0');
+    
+    console.log('✅ Created Payments sheet');
+  } else {
+    // Check if headers exist
+    const lastRow = paymentsSheet.getLastRow();
+    if (lastRow === 0) {
+      paymentsSheet.appendRow([
+        'Timestamp',
+        'Email', 
+        'Amount',
+        'Status',
+        'Session ID',
+        'Payment Intent ID',
+        'Currency',
+        'Client Name'
+      ]);
+      
+      const headerRange = paymentsSheet.getRange(1, 1, 1, 8);
+      headerRange.setFontWeight('bold');
+      headerRange.setBackground('#f0f0f0');
+    }
+  }
+  return paymentsSheet;
+}
+
+function appendToPayments(sheet, paymentData) {
+  const row = [
+    paymentData.timestamp || new Date().toISOString(),
+    paymentData.email || '',
+    paymentData.amount || 0,
+    paymentData.status || '',
+    paymentData.session_id || '',
+    paymentData.payment_intent_id || '',
+    paymentData.currency || 'usd',
+    paymentData.client_name || ''
+  ];
+  
+  sheet.appendRow(row);
+  console.log('✅ Payment recorded in Payments sheet');
 }
 
 /* ─────────────── EMAIL TRIGGER (AFTER PAYMENT) ─────────────── */

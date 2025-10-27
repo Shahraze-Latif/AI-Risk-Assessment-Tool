@@ -1,6 +1,6 @@
 # Stripe Payment Integration Setup
 
-This document outlines the setup required for the AI Compliance Readiness Check payment integration using direct payment intents (no webhooks required).
+This document outlines the setup required for the AI Compliance Readiness Check payment integration using Stripe webhooks for automatic payment recording.
 
 ## Environment Variables
 
@@ -14,6 +14,7 @@ NEXT_PUBLIC_SUPABASE_SERVICE_KEY=your_supabase_service_key
 # Stripe Configuration
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
 
 # Domain Configuration
 NEXT_PUBLIC_DOMAIN_URL=http://localhost:3000
@@ -30,15 +31,22 @@ NEXT_PUBLIC_DOMAIN_URL=http://localhost:3000
    - Copy your **Secret key** (starts with `sk_test_`) and add it to `STRIPE_SECRET_KEY`
    - Copy your **Publishable key** (starts with `pk_test_`) and add it to `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 
-3. **No Product Setup Required**
+3. **Set Up Webhook Endpoint**
+   - Go to Stripe Dashboard → Developers → Webhooks
+   - Click "Add endpoint"
+   - Set the endpoint URL to: `https://your-domain.com/api/webhooks/stripe`
+   - Select the following events:
+     - `checkout.session.completed`
+     - `payment_intent.succeeded`
+     - `payment_intent.requires_action`
+     - `payment_intent.payment_failed`
+     - `payment_intent.canceled`
+   - Copy the **Webhook signing secret** (starts with `whsec_`) and add it to `STRIPE_WEBHOOK_SECRET`
+
+4. **No Product Setup Required**
    - The price is set directly in the code ($200.00)
    - No need to create products or prices in Stripe Dashboard
    - To change the price, edit `amount: 20000` in `app/api/create-payment-intent/route.ts`
-
-4. **No Webhooks Required!**
-   - This implementation uses direct payment intents
-   - No webhook setup needed
-   - Payments are confirmed immediately on the frontend
 
 ## Supabase Setup
 
@@ -50,6 +58,18 @@ NEXT_PUBLIC_DOMAIN_URL=http://localhost:3000
 2. **Verify the Table**
    - Go to your Supabase Dashboard → Table Editor
    - Verify the `readiness_checks` table exists with the correct columns
+
+## Google Sheets Setup
+
+The webhook will automatically create a "Payments" tab in your connected Google Sheet with the following columns:
+- Timestamp
+- Email
+- Amount
+- Status
+- Session ID
+- Payment Intent ID
+- Currency
+- Client Name
 
 ## Testing the Integration
 
@@ -64,11 +84,25 @@ NEXT_PUBLIC_DOMAIN_URL=http://localhost:3000
    ```
 
 3. **Test the Flow**
-   - Go to `http://localhost:3000`
-   - Click "Book Readiness Check"
-   - Fill in your information and card details
-   - Complete the payment process
-   - Verify you're redirected to the questionnaire
+   - Complete the readiness questionnaire
+   - Process a test payment
+   - Check the "Payments" tab in your Google Sheet for the recorded payment
+
+4. **Test Webhook Events**
+   ```bash
+   # Using Stripe CLI (if installed)
+   stripe trigger checkout.session.completed
+   
+   # Or use the Stripe Dashboard → Webhooks → Send test event
+   ```
+
+## Webhook Security
+
+The webhook endpoint uses Stripe's signature verification to ensure events are authentic:
+- Raw request body is used for signature verification
+- Webhook secret is required for all events
+- Invalid signatures return 400 status
+- All events are logged for debugging
 
 ## Production Deployment
 
